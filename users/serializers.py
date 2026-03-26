@@ -28,9 +28,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-# -----------------------------
-# User Serializer (Profile)
-# -----------------------------
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -44,5 +42,5 @@ class UserSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at'
         ]
-        # Make read-only fields for profile view
+      
         read_only_fields = ['email', 'role', 'created_at', 'updated_at']
