@@ -19,11 +19,8 @@ export function AuthProvider({ children }) {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await api.get('/api/users/')
-      // DRF returns a list; pick first user matching stored username or just first
-      const stored = localStorage.getItem('username')
-      const found = response.data.find(u => u.username === stored) || response.data[0]
-      setUser(found || null)
+      const response = await api.get('/api/users/me/')
+      setUser(response.data)
     } catch {
       setUser(null)
       localStorage.removeItem('access_token')
@@ -33,21 +30,19 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const login = useCallback(async (username, password) => {
-    const response = await api.post('/api/token/', { username, password })
+  const login = useCallback(async (email, password) => {
+    const response = await api.post('/api/token/', { email, password })
     const { access, refresh } = response.data
 
     localStorage.setItem('access_token', access)
     localStorage.setItem('refresh_token', refresh)
-    localStorage.setItem('username', username)
 
     // Fetch user details after login
     try {
-      const userResponse = await api.get('/api/users/')
-      const found = userResponse.data.find(u => u.username === username) || userResponse.data[0]
-      setUser(found || { username })
+      const userResponse = await api.get('/api/users/me/')
+      setUser(userResponse.data)
     } catch {
-      setUser({ username })
+      setUser({ email })
     }
 
     return response.data
