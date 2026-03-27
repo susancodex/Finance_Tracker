@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(52, 211, 153, 0.3) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(52, 211, 153, 0.3);
+    border-radius: 999px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium px-5 py-2.5 rounded-xl transition-all duration-200 border border-slate-700 active:scale-95;
+  }
+
+  .btn-danger {
+    @apply bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium px-4 py-2 rounded-lg transition-all duration-200 border border-red-500/20;
+  }
+
+  .btn-edit {
+    @apply bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium px-4 py-2 rounded-lg transition-all duration-200 border border-emerald-500/20;
+  }
+
+  .input-field {
+    @apply w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-slate-900 border border-slate-800 rounded-2xl p-6;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-slate-400 mb-1.5;
+  }
+}
+
+/* Fade-in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.animate-fade-in-up-delay-1 {
+  animation: fadeInUp 0.4s 0.08s ease forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-2 {
+  animation: fadeInUp 0.4s 0.16s ease forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-3 {
+  animation: fadeInUp 0.4s 0.24s ease forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-4 {
+  animation: fadeInUp 0.4s 0.32s ease forwards;
+  opacity: 0;
+}
