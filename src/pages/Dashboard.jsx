@@ -45,11 +45,11 @@ export default function Dashboard() {
 
   // Compute summary
   const income = transactions
-    .filter(t => t.transaction_type === 'income' || t.type === 'income')
+    .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
 
   const expense = transactions
-    .filter(t => t.transaction_type === 'expense' || t.type === 'expense')
+    .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
 
   const balance = income - expense
@@ -59,6 +59,14 @@ export default function Dashboard() {
   const recent = [...transactions]
     .sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at))
     .slice(0, 5)
+
+  // Spending breakdown by category (expenses only)
+  const categorySpend = categories.map(cat => {
+    const total = transactions
+      .filter(t => t.type === 'expense' && t.category === cat.id)
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+    return { ...cat, total }
+  }).filter(c => c.total > 0).sort((a, b) => b.total - a.total).slice(0, 5)
 
   const getCategoryName = (catId) => {
     const cat = categories.find(c => c.id === catId)
@@ -149,7 +157,7 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-2">
             {recent.map((tx) => {
-              const isIncome = tx.transaction_type === 'income' || tx.type === 'income'
+              const isIncome = tx.type === 'income'
               return (
                 <div key={tx.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800/50 transition-colors group">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -166,7 +174,7 @@ export default function Dashboard() {
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-200 truncate">{tx.description || tx.title || 'Transaction'}</p>
+                    <p className="text-sm font-medium text-slate-200 truncate">{tx.note || 'Transaction'}</p>
                     <p className="text-xs text-slate-500">{getCategoryName(tx.category)} · {tx.date || tx.created_at?.slice(0, 10)}</p>
                   </div>
                   <span className={`text-sm font-mono font-medium ${isIncome ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -179,24 +187,74 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Categories summary */}
-      {categories.length > 0 && (
+      {/* Spending breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {categorySpend.length > 0 && (
+          <div className="card animate-fade-in-up-delay-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-display text-lg font-bold text-slate-100">Top Expenses</h2>
+              <Link to="/categories" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium">
+                Manage →
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {categorySpend.map((cat) => {
+                const pct = expense > 0 ? (cat.total / expense) * 100 : 0
+                return (
+                  <div key={cat.id}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm text-slate-300">{cat.name}</span>
+                      <span className="text-sm font-mono text-slate-400">{fmt(cat.total)}</span>
+                    </div>
+                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-rose-500 to-orange-400 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">{pct.toFixed(1)}% of total expenses</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Monthly summary */}
         <div className="card animate-fade-in-up-delay-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-lg font-bold text-slate-100">Your Categories</h2>
-            <Link to="/categories" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium">
-              Manage →
-            </Link>
+            <h2 className="font-display text-lg font-bold text-slate-100">This Month</h2>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
-              <span key={cat.id} className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-sm border border-slate-700">
-                {cat.name}
-              </span>
-            ))}
-          </div>
+          {(() => {
+            const now = new Date()
+            const monthTx = transactions.filter(t => {
+              const d = new Date(t.date || t.created_at)
+              return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+            })
+            const mIncome = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount || 0), 0)
+            const mExpense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount || 0), 0)
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="text-sm text-slate-300">Income</span>
+                  <span className="text-sm font-mono text-emerald-400">+{fmt(mIncome)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                  <span className="text-sm text-slate-300">Expenses</span>
+                  <span className="text-sm font-mono text-rose-400">-{fmt(mExpense)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800 border border-slate-700">
+                  <span className="text-sm text-slate-300">Net</span>
+                  <span className={`text-sm font-mono font-bold ${mIncome - mExpense >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {mIncome - mExpense >= 0 ? '+' : ''}{fmt(mIncome - mExpense)}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 text-center">{monthTx.length} transactions in {now.toLocaleString('default', { month: 'long' })}</p>
+              </div>
+            )
+          })()}
         </div>
-      )}
+      </div>
     </div>
   )
 }

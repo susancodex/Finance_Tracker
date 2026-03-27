@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserSerializer
@@ -48,3 +48,18 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def change_password(request):
+    user = request.user
+    current = request.data.get('current_password')
+    new_pw = request.data.get('new_password')
+    if not user.check_password(current):
+        return Response({'error': 'Current password is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not new_pw or len(new_pw) < 6:
+        return Response({'error': 'New password must be at least 6 characters.'}, status=status.HTTP_400_BAD_REQUEST)
+    user.set_password(new_pw)
+    user.save()
+    return Response({'detail': 'Password changed successfully.'}, status=status.HTTP_200_OK)

@@ -20,6 +20,8 @@ export default function Transactions() {
   const [error, setError] = useState('')
   const [deleteId, setDeleteId] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [monthFilter, setMonthFilter] = useState('')
 
   const fetchAll = async () => {
     try {
@@ -108,11 +110,34 @@ export default function Transactions() {
     }
   }
 
-  const filtered = filter === 'all'
-    ? transactions
-    : transactions.filter(t => t.type === filter)
+  const filtered = transactions.filter(t => {
+    if (filter !== 'all' && t.type !== filter) return false
+    if (search && !(t.note || '').toLowerCase().includes(search.toLowerCase())) return false
+    if (monthFilter) {
+      const d = new Date(t.date || t.created_at)
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      if (ym !== monthFilter) return false
+    }
+    return true
+  })
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+
+  const exportCSV = () => {
+    const rows = [['ID', 'Note', 'Type', 'Amount', 'Category', 'Date']]
+    filtered.forEach(tx => {
+      const cat = categories.find(c => c.id === tx.category)
+      rows.push([tx.id, tx.note || '', tx.type, tx.amount, cat?.name || '', tx.date || ''])
+    })
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'transactions.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   if (loading) {
     return (
@@ -128,31 +153,79 @@ export default function Transactions() {
       <div className="flex items-center justify-between animate-fade-in-up">
         <div>
           <h1 className="font-display text-3xl font-bold text-slate-100">Transactions</h1>
-          <p className="text-slate-400 text-sm mt-1">{transactions.length} total transactions</p>
+          <p className="text-slate-400 text-sm mt-1">{filtered.length} of {transactions.length} transactions</p>
         </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Add Transaction
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportCSV}
+            className="btn-secondary flex items-center gap-2 text-sm"
+            title="Export as CSV"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Export
+          </button>
+          <button onClick={openAdd} className="btn-primary flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add Transaction
+          </button>
+        </div>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 animate-fade-in-up-delay-1">
-        {['all', 'income', 'expense'].map(f => (
+      {/* Filters row */}
+      <div className="flex flex-wrap gap-3 animate-fade-in-up-delay-1">
+        {/* Type tabs */}
+        <div className="flex gap-2">
+          {['all', 'income', 'expense'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all duration-200 ${
+                filter === f
+                  ? 'bg-emerald-500 text-slate-950'
+                  : 'bg-slate-800 text-slate-400 hover:text-slate-100 border border-slate-700'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative flex-1 min-w-48">
+          <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search by note..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input-field pl-9 py-2 text-sm"
+          />
+        </div>
+
+        {/* Month picker */}
+        <input
+          type="month"
+          value={monthFilter}
+          onChange={e => setMonthFilter(e.target.value)}
+          className="input-field py-2 text-sm w-40"
+          title="Filter by month"
+        />
+
+        {/* Clear filters */}
+        {(search || monthFilter || filter !== 'all') && (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all duration-200 ${
-              filter === f
-                ? 'bg-emerald-500 text-slate-950'
-                : 'bg-slate-800 text-slate-400 hover:text-slate-100 border border-slate-700'
-            }`}
+            onClick={() => { setSearch(''); setMonthFilter(''); setFilter('all') }}
+            className="px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-slate-100 bg-slate-800 border border-slate-700 transition-colors"
           >
-            {f}
+            Clear
           </button>
-        ))}
+        )}
       </div>
 
       {/* Form modal */}
