@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../api/axios'
 
-const EMPTY_FORM = { name: '', description: '' }
+const EMPTY_FORM = { name: '', type: 'expense' }
 
 export default function Categories() {
   const [categories, setCategories] = useState([])
@@ -34,7 +34,7 @@ export default function Categories() {
   }
 
   const openEdit = (cat) => {
-    setForm({ name: cat.name, description: cat.description || '' })
+    setForm({ name: cat.name, type: cat.type || 'expense' })
     setEditId(cat.id)
     setError('')
     setShowForm(true)
@@ -152,15 +152,17 @@ export default function Categories() {
                 />
               </div>
               <div>
-                <label className="label">Description <span className="text-slate-600">(optional)</span></label>
-                <textarea
-                  name="description"
-                  className="input-field resize-none"
-                  rows={3}
-                  placeholder="Brief description of this category..."
-                  value={form.description}
+                <label className="label">Type</label>
+                <select
+                  name="type"
+                  className="input-field"
+                  value={form.type}
                   onChange={handleChange}
-                />
+                  required
+                >
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1">
@@ -248,13 +250,11 @@ export default function Categories() {
               </div>
 
               <h3 className="font-display font-bold text-slate-100 text-lg mb-1">{cat.name}</h3>
-              {cat.description ? (
-                <p className="text-slate-400 text-sm leading-relaxed line-clamp-2">{cat.description}</p>
-              ) : (
-                <p className="text-slate-600 text-sm italic">No description</p>
-              )}
 
-              <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${cat.type === 'income' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                  {cat.type === 'income' ? 'Income' : 'Expense'}
+                </span>
                 <p className="text-xs text-slate-500 font-mono">ID #{cat.id}</p>
               </div>
             </div>

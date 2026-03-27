@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import api from '../api/axios'
 
 const EMPTY_FORM = {
-  description: '',
+  note: '',
   amount: '',
-  transaction_type: 'expense',
+  type: 'expense',
   category: '',
   date: new Date().toISOString().slice(0, 10),
 }
@@ -52,9 +52,9 @@ export default function Transactions() {
 
   const openEdit = (tx) => {
     setForm({
-      description: tx.description || tx.title || '',
+      note: tx.note || '',
       amount: tx.amount,
-      transaction_type: tx.transaction_type || tx.type || 'expense',
+      type: tx.type || 'expense',
       category: tx.category || '',
       date: tx.date || new Date().toISOString().slice(0, 10),
     })
@@ -110,7 +110,7 @@ export default function Transactions() {
 
   const filtered = filter === 'all'
     ? transactions
-    : transactions.filter(t => (t.transaction_type || t.type) === filter)
+    : transactions.filter(t => t.type === filter)
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
 
@@ -178,8 +178,8 @@ export default function Transactions() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="label">Description</label>
-                <input name="description" className="input-field" placeholder="What was this for?" value={form.description} onChange={handleChange} required />
+                <label className="label">Note <span className="text-slate-600">(optional)</span></label>
+                <input name="note" className="input-field" placeholder="What was this for?" value={form.note} onChange={handleChange} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -195,7 +195,7 @@ export default function Transactions() {
 
               <div>
                 <label className="label">Type</label>
-                <select name="transaction_type" className="input-field" value={form.transaction_type} onChange={handleChange}>
+                <select name="type" className="input-field" value={form.type} onChange={handleChange}>
                   <option value="expense">Expense</option>
                   <option value="income">Income</option>
                 </select>
@@ -243,7 +243,7 @@ export default function Transactions() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-800">
-                <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">Description</th>
+                <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">Note</th>
                 <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">Category</th>
                 <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">Date</th>
                 <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider px-6 py-4">Type</th>
@@ -260,11 +260,11 @@ export default function Transactions() {
                 </tr>
               ) : (
                 filtered.map(tx => {
-                  const isIncome = tx.transaction_type === 'income' || tx.type === 'income'
+                  const isIncome = tx.type === 'income'
                   return (
                     <tr key={tx.id} className="hover:bg-slate-800/40 transition-colors group">
                       <td className="px-6 py-4">
-                        <p className="text-sm text-slate-200">{tx.description || tx.title || '—'}</p>
+                        <p className="text-sm text-slate-200">{tx.note || '—'}</p>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-xs px-2 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700">
