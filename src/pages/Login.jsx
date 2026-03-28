@@ -72,6 +72,11 @@ export default function Login() {
               Track income and expenses, understand your spending, and take control of your financial health — all in one place.
             </p>
 
+            {/* Creator credit */}
+            <p className="mt-5 text-slate-600 text-sm tracking-wide">
+              — Created by <span className="text-slate-500 font-medium">Susan Acharya</span>
+            </p>
+
             {/* Feature badges */}
             <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
               {[
@@ -180,6 +185,14 @@ export default function Login() {
         </div>
       </div>
 
+
+      {/* Footer */}
+      <footer className="py-4 text-center">
+        <p className="text-xs text-slate-600">
+          © 2026 Finance Tracker &nbsp;•&nbsp; Built by{' '}
+          <span className="text-slate-500 font-medium">Susan Acharya</span>
+        </p>
+      </footer>
 
     </div>
   )
