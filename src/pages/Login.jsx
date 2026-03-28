@@ -175,10 +175,6 @@ export default function Login() {
               </Link>
             </div>
 
-            {/* Footer hint */}
-            <p className="mt-5 text-center text-xs text-slate-600">
-              By continuing, you agree to our Terms &amp; Privacy Policy.
-            </p>
           </div>
 
         </div>
