@@ -2,33 +2,29 @@
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
 *.egg-info/
-dist/
-build/
-*.egg
 .eggs/
 .venv/
 venv/
 env/
-.env
 *.log
 
 # Django
-db.sqlite3
-staticfiles/
-media/
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
 *.pot
 
 # Node
-node_modules/
-dist/
-.npm/
+frontend/node_modules/
+frontend/dist/
 
 # Environment
 .env
 .env.local
-.env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
 
 # IDE
 .vscode/
@@ -41,4 +37,4 @@ dist/
 .cache/
 .upm/
 .pythonlibs/
-uv.lock
+backend/uv.lock

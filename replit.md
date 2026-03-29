@@ -4,92 +4,93 @@ A full-stack personal finance tracking application with a React + Vite frontend 
 
 ## Architecture
 
-- **Frontend**: React 18 + Vite, Tailwind CSS, React Router v6, Axios
-- **Backend**: Django 6 + Django REST Framework, JWT authentication (simplejwt), django-cors-headers
-- **Database**: SQLite (`db.sqlite3`)
+- **Frontend**: React 18 + Vite, Tailwind CSS, React Router v6, Axios (`frontend/`)
+- **Backend**: Django 6 + Django REST Framework, JWT auth, WhiteNoise, PostgreSQL support (`backend/`)
+- **Database**: SQLite in development, PostgreSQL in production (via `DATABASE_URL`)
 - **Auth**: JWT tokens (access: 1 hour, refresh: 7 days)
 
 ## Project Layout
 
 ```
 /
-├── src/                  # React frontend source
-│   ├── App.jsx           # Root component with routing
-│   ├── pages/            # Login, Register, Dashboard, Transactions, Categories
-│   ├── contexts/         # AuthContext for JWT state management
-│   ├── layouts/          # AppLayout (protected app shell)
-│   ├── routes/           # ProtectedRoute, PublicRoute guards
-│   └── api/              # Axios API client
-├── finance_tracker/      # Django project config (settings, urls, wsgi)
-├── users/                # Custom user model app
-├── transactions/         # Transaction model/API app
-├── categories/           # Category model/API app
-├── profiles/             # User profile app
-├── manage.py             # Django management script
-├── vite.config.js        # Vite config (port 5000, proxy to :8000)
-└── db.sqlite3            # SQLite database
+├── backend/                   # Django REST API
+│   ├── finance_tracker/       # Django project config (settings, urls, wsgi)
+│   ├── users/                 # Custom user model, OTP auth
+│   ├── transactions/          # Transaction model/API
+│   ├── categories/            # Category model/API
+│   ├── profiles/              # User profiles
+│   ├── manage.py
+│   ├── requirements.txt       # Python dependencies
+│   ├── build.sh               # Render build script (backend only)
+│   └── .env.example           # Backend environment variables reference
+│
+├── frontend/                  # React SPA
+│   ├── src/
+│   │   ├── App.jsx            # Root component with routing
+│   │   ├── pages/             # Login, Register, Dashboard, Transactions, Categories
+│   │   ├── contexts/          # AuthContext (JWT state)
+│   │   ├── layouts/           # AppLayout (protected shell)
+│   │   ├── routes/            # ProtectedRoute, PublicRoute
+│   │   └── api/axios.js       # Axios client (uses VITE_API_URL in production)
+│   ├── package.json
+│   ├── vite.config.js         # Port 5000, proxy /api/* → localhost:8000 (dev only)
+│   └── .env.example           # Frontend environment variables reference
+│
+├── render.yaml                # Render Blueprint (2 services: backend + frontend)
+├── .gitignore
+└── replit.md
 ```
 
 ## Development Workflows
 
-- **Frontend**: `npm run dev` — Vite dev server on port 5000 (webview)
-- **Backend**: `python manage.py runserver localhost:8000` — Django dev server on port 8000 (console)
-
-## Key Configuration
-
-- Vite proxies `/api/*` requests to `http://localhost:8000`
-- Django `ALLOWED_HOSTS = ['*']` and `CORS_ALLOW_ALL_ORIGINS = True` for dev
-- Frontend host: `0.0.0.0`, port `5000`, `allowedHosts: true` for Replit proxy
-- Backend host: `localhost`, port `8000`
-
-## API Endpoints
-
-- `POST /api/token/` — obtain JWT token pair
-- `POST /api/token/refresh/` — refresh access token
-- `POST /api/register/` — user registration (users app)
-- `/api/categories/` — categories CRUD
-- `/api/transactions/` — transactions CRUD
+- **Frontend**: `cd frontend && npm run dev` — Vite dev server on port 5000
+- **Backend**: `cd backend && python manage.py runserver localhost:8000` — Django on port 8000
+- Vite proxies `/api/*` and `/media/*` to `localhost:8000` in development
 
 ## Render Deployment
 
-The project is configured for a **single Render web service** — Django serves both the REST API and the built React frontend via WhiteNoise.
+Two separate Render services defined in `render.yaml`:
 
-### Files created for deployment
-- **`render.yaml`** — Render Blueprint (defines web service + free PostgreSQL database)
-- **`build.sh`** — build script run by Render: installs deps, builds React, runs `collectstatic` and `migrate`
-- **`requirements.txt`** — Python dependencies
-- **`.env.example`** — documents all required environment variables
+| Service | Type | Root Dir | Build Command | Start Command |
+|---|---|---|---|---|
+| `finance-tracker-backend` | Python Web Service | `backend/` | `./build.sh` | `gunicorn finance_tracker.wsgi:application` |
+| `finance-tracker-frontend` | Static Site | `frontend/` | `npm install && npm run build` | *(static)* |
 
-### How to deploy on Render
-1. Push this repository to GitHub
-2. Go to [render.com](https://render.com) → New → Blueprint
-3. Connect your GitHub repo — Render will detect `render.yaml` automatically
-4. Set these environment variable values (marked `sync: false` in `render.yaml`):
-   - `EMAIL_HOST_USER` — your Gmail address
-   - `EMAIL_HOST_PASSWORD` — your Gmail App Password
-   - `CORS_ALLOWED_ORIGINS` — your Render frontend URL (e.g. `https://finance-tracker.onrender.com`)
-5. Deploy — Render will run `build.sh`, start gunicorn, and serve everything
+### Deploy Steps
 
-### Architecture in production
-- Django + gunicorn serves the API (`/api/*`) and the React SPA (all other routes)
-- WhiteNoise serves static files (JS/CSS/images from the React build)
-- PostgreSQL is provisioned by Render (free tier)
+1. Push this repo to GitHub
+2. Go to [render.com](https://render.com) → **New** → **Blueprint**
+3. Connect your GitHub repo — Render auto-detects `render.yaml`
+4. **Deploy the backend first**, then note its URL (e.g. `https://finance-tracker-backend.onrender.com`)
+5. Set these values marked `sync: false` in `render.yaml`:
+
+**Backend service:**
+- `EMAIL_HOST_USER` → your Gmail address
+- `EMAIL_HOST_PASSWORD` → your Gmail App Password
+- `CORS_ALLOWED_ORIGINS` → your frontend Render URL (set after frontend is deployed)
+
+**Frontend service:**
+- `VITE_API_URL` → your backend Render URL (e.g. `https://finance-tracker-backend.onrender.com`)
+
+> Note: `VITE_API_URL` is baked in at build time by Vite. If you change the backend URL, redeploy the frontend.
+
+### Production Architecture
+- **Backend**: Django + gunicorn serves all `/api/*` routes; WhiteNoise serves admin static files; PostgreSQL via `DATABASE_URL`
+- **Frontend**: Rendered as a Render Static Site; all routes rewrite to `index.html` so React Router works
 - `DEBUG=false`, `SECRET_KEY` auto-generated by Render
 
 ## Email Configuration
 
-OTP emails (registration verification + password reset) are sent via Gmail SMTP.
+OTP emails (registration + password reset) use Gmail SMTP.
 
-- **EMAIL_BACKEND** env var: set to `smtp` to use real Gmail delivery (currently active)
-- **EMAIL_HOST_USER** secret: Gmail address used as sender
-- **EMAIL_HOST_PASSWORD** secret: Gmail App Password (not the regular account password)
-- **EMAIL_HOST**: defaults to `smtp.gmail.com`, port 587 with TLS
-- If `EMAIL_BACKEND` is not `smtp`, falls back to console mode (OTP printed to server logs and auto-filled in the UI when DEBUG=True)
+- `EMAIL_BACKEND=smtp` → enables real sending (default in production)
+- `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` → stored as Replit secrets locally, set as Render env vars in production
+- Falls back to console mode if `EMAIL_BACKEND` is not `smtp` (OTP auto-filled in UI when `DEBUG=True`)
 
 ## Dependencies
 
-### Python
-- django, djangorestframework, djangorestframework-simplejwt, django-cors-headers, Pillow, gunicorn
+### Python (`backend/requirements.txt`)
+`django`, `djangorestframework`, `djangorestframework-simplejwt`, `django-cors-headers`, `whitenoise`, `dj-database-url`, `psycopg2-binary`, `Pillow`, `gunicorn`
 
-### Node
-- react, react-dom, react-router-dom, axios, vite, tailwindcss, postcss, autoprefixer
+### Node (`frontend/package.json`)
+`react`, `react-dom`, `react-router-dom`, `axios`, `vite`, `tailwindcss`, `postcss`, `autoprefixer`
