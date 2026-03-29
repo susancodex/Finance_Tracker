@@ -7,12 +7,13 @@ export default function VerifyEmail() {
   const navigate = useNavigate();
 
   const [email, setEmail]       = useState(searchParams.get('email') || '');
-  const [otp, setOtp]           = useState('');
+  const [otp, setOtp]           = useState(searchParams.get('otp') || '');
   const [loading, setLoading]   = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError]       = useState('');
   const [success, setSuccess]   = useState('');
   const [countdown, setCountdown] = useState(0);
+  const devOtp = searchParams.get('otp');
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -47,8 +48,13 @@ export default function VerifyEmail() {
     setError('');
     setResending(true);
     try {
-      await api.post('/api/resend-otp/', { email, otp_type: 'registration' });
-      setSuccess('A new OTP has been sent to your email.');
+      const res = await api.post('/api/resend-otp/', { email, otp_type: 'registration' });
+      if (res.data?.otp) {
+        setOtp(res.data.otp);
+        setSuccess(`A new OTP has been generated and auto-filled below.`);
+      } else {
+        setSuccess('A new OTP has been sent to your email.');
+      }
       setCountdown(60); // 60-second cooldown
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to resend OTP.');
@@ -76,6 +82,12 @@ export default function VerifyEmail() {
           We sent a 6-digit OTP to <span className="text-indigo-400 font-medium">{email || 'your email'}</span>.
           Enter it below to activate your account.
         </p>
+
+        {devOtp && (
+          <div className="mb-4 p-3 bg-yellow-900/40 border border-yellow-600 text-yellow-300 rounded-lg text-sm">
+            <strong>Development mode:</strong> Your OTP has been auto-filled below. Just click <em>Verify Email</em> to continue.
+          </div>
+        )}
 
         {error   && <div className="mb-4 p-3 bg-red-900/40 border border-red-700 text-red-300 rounded-lg text-sm">{error}</div>}
         {success && <div className="mb-4 p-3 bg-green-900/40 border border-green-700 text-green-300 rounded-lg text-sm">{success}</div>}

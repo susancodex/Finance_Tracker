@@ -30,13 +30,15 @@ export default function Register() {
     setError('')
 
     try {
-      await register({
+      const data = await register({
         username: form.username,
         email: form.email,
         password: form.password,
       })
       setSuccess('Account created! Redirecting to email verification...')
-      setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(form.email)}`), 1500)
+      const params = new URLSearchParams({ email: form.email })
+      if (data?.otp) params.set('otp', data.otp)
+      setTimeout(() => navigate(`/verify-email?${params.toString()}`), 1500)
     } catch (err) {
       const data = err.response?.data
       if (data) {

@@ -39,21 +39,27 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """Register a new (inactive) user and send email OTP."""
+        from django.conf import settings as django_settings
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()  # is_active=False is set in the serializer
 
         # Send OTP for email verification
+        otp_code = None
         try:
-            create_and_send_otp(user.email, 'registration')
+            otp_code = create_and_send_otp(user.email, 'registration')
         except Exception:
             # Don't fail registration if email delivery fails
             pass
 
-        return Response(
-            {'detail': 'Registration successful. Please check your email for a 6-digit verification OTP.'},
-            status=status.HTTP_201_CREATED,
-        )
+        response_data = {
+            'detail': 'Registration successful. Please check your email for a 6-digit verification OTP.',
+        }
+        if django_settings.DEBUG:
+            response_data['otp'] = otp_code
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,
@@ -200,18 +206,22 @@ class ResendOTPView(APIView):
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
+        from django.conf import settings as django_settings
+
+        otp_code = None
         try:
-            create_and_send_otp(email, otp_type)
+            otp_code = create_and_send_otp(email, otp_type)
         except Exception:
             return Response(
                 {'error': 'Failed to send OTP. Please try again later.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        return Response(
-            {'detail': 'A new OTP has been sent to your email.'},
-            status=status.HTTP_200_OK,
-        )
+        response_data = {'detail': 'A new OTP has been sent to your email.'}
+        if django_settings.DEBUG:
+            response_data['otp'] = otp_code
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 # ── Forgot Password ───────────────────────────────────────────────────────────
