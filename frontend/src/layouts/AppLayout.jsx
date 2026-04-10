@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-const navItems = [
+const allNavItems = [
   {
     to: '/dashboard',
     label: 'Dashboard',
@@ -60,6 +60,9 @@ const navItems = [
   },
 ]
 
+// Only 5 items in bottom bar (Categories accessible via sidebar/hamburger)
+const bottomNavItems = allNavItems.filter(n => n.to !== '/categories')
+
 export default function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -103,9 +106,9 @@ export default function AppLayout() {
           </div>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-5 space-y-1">
-          {navItems.map((item) => (
+        {/* Nav — all 6 items */}
+        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+          {allNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -153,7 +156,7 @@ export default function AppLayout() {
         <header className="h-14 sm:h-16 border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-slate-400 hover:text-slate-100 transition-colors p-1 -ml-1"
+            className="lg:hidden text-slate-400 hover:text-slate-100 transition-colors p-2 -ml-2 rounded-xl active:bg-slate-800"
             aria-label="Open menu"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -180,30 +183,40 @@ export default function AppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-3 sm:p-6">
+        <main className="flex-1 overflow-auto p-3 sm:p-6 pb-24 lg:pb-6">
           <Outlet />
         </main>
 
-        {/* Mobile bottom navigation */}
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 z-10 flex">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex-1 flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors ${
-                  isActive ? 'text-emerald-400' : 'text-slate-500'
-                }`
-              }
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+        {/* Mobile bottom navigation — 5 items */}
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-slate-900/98 backdrop-blur-md border-t border-slate-800 z-10 safe-area-pb">
+          <div className="flex items-stretch">
+            {bottomNavItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold tracking-wide transition-all duration-150 active:scale-90 min-h-[56px] ${
+                    isActive
+                      ? 'text-emerald-400'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span className={`transition-all duration-150 ${isActive ? 'scale-110' : ''}`}>
+                      {item.icon}
+                    </span>
+                    <span className="leading-none">{item.label}</span>
+                    {isActive && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-400" />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
         </nav>
-
-        {/* Bottom nav spacer on mobile */}
-        <div className="lg:hidden h-16" />
       </div>
     </div>
   )
