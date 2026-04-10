@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
@@ -11,6 +13,8 @@ from .serializers import (
     ForgotPasswordSerializer, ResetPasswordSerializer,
 )
 from .utils import create_and_send_otp
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -49,9 +53,8 @@ class UserViewSet(viewsets.ModelViewSet):
         otp_code = None
         try:
             otp_code = create_and_send_otp(user.email, 'registration')
-        except Exception:
-            # Don't fail registration if email delivery fails
-            pass
+        except Exception as e:
+            logger.error("Failed to send registration OTP to %s: %s", user.email, e, exc_info=True)
 
         response_data = {
             'detail': 'Registration successful. Please check your email for a 6-digit verification OTP.',
@@ -247,8 +250,8 @@ class ForgotPasswordView(APIView):
         if User.objects.filter(email=email, is_active=True).exists():
             try:
                 create_and_send_otp(email, 'password_reset')
-            except Exception:
-                pass  # Fail silently to avoid leaking info
+            except Exception as e:
+                logger.error("Failed to send password reset OTP to %s: %s", email, e, exc_info=True)
 
         return Response(
             {
