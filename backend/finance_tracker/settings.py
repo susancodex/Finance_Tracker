@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     'users',
     'transactions',
     'categories',
+    'budgets',
+    'goals',
 ]
 
 # ── Middleware ─────────────────────────────────────────────────────────────────
