@@ -76,7 +76,6 @@ export default function Categories() {
     }
   }
 
-  // Color palette for category cards
   const colors = [
     'from-emerald-500/20 to-teal-500/10 border-emerald-500/20',
     'from-violet-500/20 to-purple-500/10 border-violet-500/20',
@@ -100,33 +99,34 @@ export default function Categories() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between animate-fade-in-up">
         <div>
-          <h1 className="font-display text-3xl font-bold text-slate-100">Categories</h1>
-          <p className="text-slate-400 text-sm mt-1">{categories.length} categories configured</p>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-100">Categories</h1>
+          <p className="text-slate-400 text-xs sm:text-sm mt-0.5 sm:mt-1">{categories.length} categories configured</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          New Category
+          <span className="hidden sm:inline">New Category</span>
+          <span className="sm:hidden">New</span>
         </button>
       </div>
 
       {/* Form modal */}
       {showForm && (
         <div
-          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={(e) => e.target === e.currentTarget && setShowForm(false)}
         >
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md animate-fade-in-up shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display text-xl font-bold text-slate-100">
+          <div className="bg-slate-900 border border-slate-700 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md animate-fade-in-up shadow-2xl">
+            <div className="flex items-center justify-between mb-5 sm:mb-6">
+              <h2 className="font-display text-lg sm:text-xl font-bold text-slate-100">
                 {editId ? 'Edit Category' : 'New Category'}
               </h2>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-100 transition-colors">
+              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-100 transition-colors p-1">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -182,8 +182,8 @@ export default function Categories() {
 
       {/* Delete confirm */}
       {deleteId && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-sm shadow-2xl">
             <h3 className="font-display text-lg font-bold text-slate-100 mb-2">Delete Category?</h3>
             <p className="text-slate-400 text-sm mb-6">
               This may affect transactions assigned to this category. This action cannot be undone.
@@ -203,9 +203,9 @@ export default function Categories() {
 
       {/* Category grid */}
       {categories.length === 0 ? (
-        <div className="card text-center py-16 animate-fade-in-up-delay-1">
-          <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="card text-center py-12 sm:py-16 animate-fade-in-up-delay-1">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 sm:w-8 sm:h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
             </svg>
           </div>
@@ -214,20 +214,21 @@ export default function Categories() {
           <button onClick={openAdd} className="btn-primary">Create first category</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in-up-delay-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 animate-fade-in-up-delay-1">
           {categories.map((cat, idx) => (
             <div
               key={cat.id}
-              className={`relative bg-gradient-to-br ${colors[idx % colors.length]} border rounded-2xl p-5 group transition-all duration-200 hover:scale-[1.02]`}
+              className={`relative bg-gradient-to-br ${colors[idx % colors.length]} border rounded-2xl p-4 sm:p-5 group transition-all duration-200 hover:scale-[1.02]`}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center ${iconColors[idx % iconColors.length]}`}>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center ${iconColors[idx % iconColors.length]}`}>
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                   </svg>
                 </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {/* Always visible on mobile, hover on desktop */}
+                <div className="flex gap-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
                   <button
                     onClick={() => openEdit(cat)}
                     className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
@@ -249,9 +250,9 @@ export default function Categories() {
                 </div>
               </div>
 
-              <h3 className="font-display font-bold text-slate-100 text-lg mb-1">{cat.name}</h3>
+              <h3 className="font-display font-bold text-slate-100 text-base sm:text-lg mb-1">{cat.name}</h3>
 
-              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/10 flex items-center justify-between">
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${cat.type === 'income' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
                   {cat.type === 'income' ? 'Income' : 'Expense'}
                 </span>

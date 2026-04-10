@@ -132,10 +132,11 @@ export default function AppLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="h-16 border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-10">
+        <header className="h-14 sm:h-16 border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-slate-400 hover:text-slate-100 transition-colors"
+            className="lg:hidden text-slate-400 hover:text-slate-100 transition-colors p-1 -ml-1"
+            aria-label="Open menu"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -143,7 +144,7 @@ export default function AppLayout() {
           </button>
           <div className="hidden lg:block" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-xs text-slate-500">Signed in as</p>
               <p className="text-sm font-medium text-slate-200">{user?.username}</p>
@@ -155,15 +156,36 @@ export default function AppLayout() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
               </svg>
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-3 sm:p-6">
           <Outlet />
         </main>
+
+        {/* Mobile bottom navigation */}
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 z-10 flex">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex-1 flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors ${
+                  isActive ? 'text-emerald-400' : 'text-slate-500'
+                }`
+              }
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Bottom nav spacer on mobile */}
+        <div className="lg:hidden h-16" />
       </div>
     </div>
   )
