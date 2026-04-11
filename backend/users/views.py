@@ -19,14 +19,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-# ── User Registration & Profile ───────────────────────────────────────────────
-
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    Handles:
-    - User registration (POST /users/)      → sends verification OTP
-    - User profile     (GET/PATCH /users/me/)
-    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -42,14 +35,12 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def create(self, request, *args, **kwargs):
-        """Register a new (inactive) user and send email OTP."""
         from django.conf import settings as django_settings
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()  # is_active=False is set in the serializer
+        user = serializer.save()
 
-        # Send OTP for email verification
         otp_code = None
         try:
             otp_code = create_and_send_otp(user.email, 'registration')
@@ -59,7 +50,6 @@ class UserViewSet(viewsets.ModelViewSet):
         response_data = {
             'detail': 'Registration successful. Please check your email for a 6-digit verification OTP.',
         }
-        # Only expose OTP in response when using console backend (no real email configured)
         using_console = 'console' in django_settings.EMAIL_BACKEND
         if django_settings.DEBUG and using_console:
             response_data['otp'] = otp_code
@@ -73,7 +63,6 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def me(self, request):
-        """Retrieve or update the current logged-in user's profile."""
         user = request.user
         if request.method == 'PATCH':
             serializer = UserSerializer(user, data=request.data, partial=True)
@@ -84,15 +73,12 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# ── Change Password (authenticated) ──────────────────────────────────────────
-
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def change_password(request):
-    """Allow a logged-in user to change their password."""
     user = request.user
     current = request.data.get('current_password')
-    new_pw  = request.data.get('new_password')
+    new_pw = request.data.get('new_password')
 
     if not user.check_password(current):
         return Response(
@@ -109,14 +95,7 @@ def change_password(request):
     return Response({'detail': 'Password changed successfully.'}, status=status.HTTP_200_OK)
 
 
-# ── Verify Email OTP ──────────────────────────────────────────────────────────
-
 class VerifyEmailView(APIView):
-    """
-    POST /api/verify-email/
-    Body: { "email": "...", "otp": "123456" }
-    Activates the user account if the OTP is correct and not expired.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -124,9 +103,8 @@ class VerifyEmailView(APIView):
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data['email']
-        otp   = serializer.validated_data['otp']
+        otp = serializer.validated_data['otp']
 
-        # Find the latest unverified registration OTP for this email
         record = (
             OTPVerification.objects
             .filter(email=email, otp_type='registration', is_verified=False)
@@ -151,7 +129,6 @@ class VerifyEmailView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Mark OTP as used and activate the user
         record.is_verified = True
         record.save()
 
@@ -171,24 +148,16 @@ class VerifyEmailView(APIView):
         )
 
 
-# ── Resend OTP ────────────────────────────────────────────────────────────────
-
 class ResendOTPView(APIView):
-    """
-    POST /api/resend-otp/
-    Body: { "email": "...", "otp_type": "registration" | "password_reset" }
-    Generates a fresh OTP and re-sends it to the email.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = ResendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email    = serializer.validated_data['email']
+        email = serializer.validated_data['email']
         otp_type = serializer.validated_data.get('otp_type', 'registration')
 
-        # For registration OTP, the user must exist and be inactive
         if otp_type == 'registration':
             try:
                 user = User.objects.get(email=email)
@@ -203,7 +172,6 @@ class ResendOTPView(APIView):
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-        # For password reset OTP, the user must exist and be active
         if otp_type == 'password_reset':
             if not User.objects.filter(email=email, is_active=True).exists():
                 return Response(
@@ -230,14 +198,7 @@ class ResendOTPView(APIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
-# ── Forgot Password ───────────────────────────────────────────────────────────
-
 class ForgotPasswordView(APIView):
-    """
-    POST /api/forgot-password/
-    Body: { "email": "..." }
-    Sends a password-reset OTP to the given email (if an active account exists).
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -246,7 +207,6 @@ class ForgotPasswordView(APIView):
 
         email = serializer.validated_data['email']
 
-        # Always respond the same way to prevent email enumeration attacks
         if User.objects.filter(email=email, is_active=True).exists():
             try:
                 create_and_send_otp(email, 'password_reset')
@@ -264,25 +224,17 @@ class ForgotPasswordView(APIView):
         )
 
 
-# ── Reset Password ────────────────────────────────────────────────────────────
-
 class ResetPasswordView(APIView):
-    """
-    POST /api/reset-password/
-    Body: { "email": "...", "otp": "123456", "new_password": "..." }
-    Validates the OTP and updates the user's password.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email        = serializer.validated_data['email']
-        otp          = serializer.validated_data['otp']
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
         new_password = serializer.validated_data['new_password']
 
-        # Find the latest unverified password-reset OTP
         record = (
             OTPVerification.objects
             .filter(email=email, otp_type='password_reset', is_verified=False)
@@ -307,7 +259,6 @@ class ResetPasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Update password
         try:
             user = User.objects.get(email=email, is_active=True)
         except User.DoesNotExist:
@@ -319,7 +270,6 @@ class ResetPasswordView(APIView):
         user.set_password(new_password)
         user.save()
 
-        # Mark OTP as used
         record.is_verified = True
         record.save()
 

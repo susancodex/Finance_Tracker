@@ -4,7 +4,6 @@ from .models import OTPVerification, generate_otp
 
 
 def send_otp_email(email, otp_code, otp_type):
-    """Build and send OTP email based on type."""
     if otp_type == 'registration':
         subject = 'Verify Your Email - Finance Tracker'
         message = (
@@ -36,18 +35,12 @@ def send_otp_email(email, otp_code, otp_type):
 
 
 def create_and_send_otp(email, otp_type):
-    """
-    Delete any existing pending OTPs for the given email+type,
-    create a fresh one, send it via email, and return the OTP code.
-    """
-    # Invalidate any previous unused OTPs for this email/type
     OTPVerification.objects.filter(
         email=email,
         otp_type=otp_type,
         is_verified=False,
     ).delete()
 
-    # Generate and store new OTP
     otp_code = generate_otp()
     OTPVerification.objects.create(
         email=email,
@@ -55,6 +48,5 @@ def create_and_send_otp(email, otp_type):
         otp_type=otp_type,
     )
 
-    # Send the email
     send_otp_email(email, otp_code, otp_type)
     return otp_code

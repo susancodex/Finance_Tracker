@@ -7,5 +7,3 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name', 'type', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
-        
-        

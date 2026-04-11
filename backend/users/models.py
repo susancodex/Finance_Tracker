@@ -6,7 +6,6 @@ import random
 
 
 def generate_otp():
-    """Generate a random 6-digit OTP."""
     return str(random.randint(100000, 999999))
 
 
@@ -26,7 +25,6 @@ class OTPVerification(models.Model):
         ordering = ['-created_at']
 
     def is_expired(self):
-        """OTP expires after 10 minutes."""
         return timezone.now() > self.created_at + timedelta(minutes=10)
 
     def __str__(self):

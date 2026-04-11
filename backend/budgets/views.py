@@ -1,11 +1,13 @@
+import datetime
+
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Sum
+
 from .models import Budget
 from .serializers import BudgetSerializer
 from transactions.models import Transaction
-import datetime
 
 
 class BudgetViewSet(viewsets.ModelViewSet):
@@ -35,6 +37,9 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
             serialized = BudgetSerializer(budget).data
             serialized['spent'] = float(spent)
-            serialized['percentage'] = round((float(spent) / float(budget.amount)) * 100, 1) if float(budget.amount) > 0 else 0
+            serialized['percentage'] = (
+                round((float(spent) / float(budget.amount)) * 100, 1)
+                if float(budget.amount) > 0 else 0
+            )
             data.append(serialized)
         return Response(data)
