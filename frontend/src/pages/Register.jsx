@@ -64,6 +64,7 @@ export default function Register() {
           username: 'Username',
           non_field_errors: '',
           detail: '',
+          error: '',
         }
         const messages = Object.entries(responseData)
           .map(([key, val]) => {

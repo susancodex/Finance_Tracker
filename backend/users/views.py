@@ -42,10 +42,26 @@ class UserViewSet(viewsets.ModelViewSet):
         user = serializer.save()
 
         otp_code = None
+        email_error = None
         try:
             otp_code = create_and_send_otp(user.email, 'registration')
         except Exception as e:
             logger.error("Failed to send registration OTP to %s: %s", user.email, e, exc_info=True)
+            email_error = str(e)
+
+        if email_error and not django_settings.DEBUG:
+            # Delete the inactive user so they can try again
+            user.delete()
+            return Response(
+                {
+                    'error': (
+                        'Your account could not be created because we were unable to send '
+                        'a verification email. Please check that the email address is correct '
+                        'and try again. If the problem persists, contact support.'
+                    )
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         response_data = {
             'detail': 'Registration successful. Please check your email for a 6-digit verification OTP.',

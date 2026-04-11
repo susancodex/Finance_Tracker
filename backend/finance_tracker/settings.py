@@ -54,6 +54,11 @@ if _cors_origins:
 else:
     CORS_ALLOW_ALL_ORIGINS = True
 
+# Allow any *.onrender.com subdomain so Render-deployed frontends always work
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://.*\.onrender\.com$',
+]
+
 ROOT_URLCONF = 'finance_tracker.urls'
 WSGI_APPLICATION = 'finance_tracker.wsgi.application'
 
@@ -182,5 +187,7 @@ if not DEBUG:
     _csrf_list = [o.strip() for o in _csrf_origins.split(',') if o.strip()]
     if RENDER_EXTERNAL_HOSTNAME:
         _csrf_list.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+    # Trust all onrender.com subdomains so any Render-deployed service works
+    _csrf_list.append('https://*.onrender.com')
     if _csrf_list:
         CSRF_TRUSTED_ORIGINS = _csrf_list
