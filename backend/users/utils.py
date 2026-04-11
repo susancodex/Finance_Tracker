@@ -84,14 +84,13 @@ def send_otp_email(email, otp_code, otp_type):
 
     if resend_api_key:
         resend.api_key = resend_api_key
-        params = resend.Emails.SendParams(
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email],
-            subject=subject,
-            html=html,
-            text=plain,
-        )
-        resend.Emails.send(params)
+        resend.Emails.send(resend.Emails.SendParams(**{
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [email],
+            "subject": subject,
+            "html": html,
+            "text": plain,
+        }))
     else:
         from django.core.mail import EmailMultiAlternatives
         msg = EmailMultiAlternatives(
@@ -201,14 +200,13 @@ def send_budget_alert_email(email, user_name, category_name, budget_amount, spen
 
     if resend_api_key:
         resend.api_key = resend_api_key
-        params = resend.Emails.SendParams(
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email],
-            subject=subject,
-            html=html,
-            text=plain,
-        )
-        resend.Emails.send(params)
+        resend.Emails.send(resend.Emails.SendParams(**{
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [email],
+            "subject": subject,
+            "html": html,
+            "text": plain,
+        }))
     else:
         from django.core.mail import EmailMultiAlternatives
         msg = EmailMultiAlternatives(
