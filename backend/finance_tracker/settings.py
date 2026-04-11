@@ -121,6 +121,7 @@ EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT       = 15
 
 # Port 465 uses SSL; port 587 uses STARTTLS
 _email_use_ssl = os.environ.get('EMAIL_USE_SSL', '').lower() in ('true', '1', 'yes')
