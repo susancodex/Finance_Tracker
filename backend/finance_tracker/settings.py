@@ -15,6 +15,11 @@ DEBUG = os.environ.get('DEBUG', 'true').lower() not in ('false', '0', 'no')
 _allowed = os.environ.get('ALLOWED_HOSTS', '*')
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
 
+# Render automatically sets RENDER_EXTERNAL_HOSTNAME
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -168,3 +173,10 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    _csrf_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+    _csrf_list = [o.strip() for o in _csrf_origins.split(',') if o.strip()]
+    if RENDER_EXTERNAL_HOSTNAME:
+        _csrf_list.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+    if _csrf_list:
+        CSRF_TRUSTED_ORIGINS = _csrf_list
