@@ -22,7 +22,7 @@ export default function Budgets() {
   const [loading, setLoading] = useState(true)
   const [month, setMonth] = useState(currentMonth())
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ category: '', amount: '', month: currentMonth() })
+  const [form, setForm] = useState({ category: '', amount: '', month: currentMonth(), alert_threshold: 80 })
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -47,14 +47,14 @@ export default function Budgets() {
   useEffect(() => { setLoading(true); fetchBudgets() }, [month])
 
   const openAdd = () => {
-    setForm({ category: '', amount: '', month })
+    setForm({ category: '', amount: '', month, alert_threshold: 80 })
     setEditId(null)
     setError('')
     setShowForm(true)
   }
 
   const openEdit = (b) => {
-    setForm({ category: b.category, amount: b.amount, month: b.month })
+    setForm({ category: b.category, amount: b.amount, month: b.month, alert_threshold: b.alert_threshold ?? 80 })
     setEditId(b.id)
     setError('')
     setShowForm(true)
@@ -234,6 +234,21 @@ export default function Budgets() {
                   required
                 />
               </div>
+              <div>
+                <label className="label">Email Alert Threshold</label>
+                <select
+                  className="input-field"
+                  value={form.alert_threshold}
+                  onChange={e => setForm({ ...form, alert_threshold: parseInt(e.target.value) })}
+                >
+                  <option value={50}>50% — Early warning</option>
+                  <option value={75}>75% — Getting close</option>
+                  <option value={80}>80% — Recommended</option>
+                  <option value={90}>90% — Near limit</option>
+                  <option value={100}>100% — Only when exceeded</option>
+                </select>
+                <p className="text-xs text-slate-500 mt-1.5">You'll also get a second alert if you exceed 100%.</p>
+              </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1 touch-manipulation">
                   Cancel
@@ -309,6 +324,12 @@ export default function Budgets() {
                       {b.percentage >= 80 && b.percentage < 100 && (
                         <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${colors.badge}`}>Near limit</span>
                       )}
+                      <span className="flex items-center gap-1 text-xs text-slate-500" title={`Email alert at ${b.alert_threshold}%`}>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                        {b.alert_threshold}%
+                      </span>
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {fmt(b.spent)} spent of {fmt(b.amount)}

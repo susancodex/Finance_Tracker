@@ -7,6 +7,8 @@ class Budget(models.Model):
     category = models.ForeignKey('categories.Category', on_delete=models.CASCADE, related_name='budgets')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     month = models.CharField(max_length=7)  # YYYY-MM
+    alert_threshold = models.PositiveSmallIntegerField(default=80)
+    last_notified_threshold = models.PositiveSmallIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

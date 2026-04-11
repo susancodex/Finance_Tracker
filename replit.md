@@ -24,6 +24,17 @@ Two workflows run in parallel:
 - **Backend API** — Django dev server on port 8000
 - **Start application** — Vite dev server on port 5000, proxies `/api` and `/media` to port 8000
 
+## Budget Alerts
+
+When a user adds an expense transaction, the backend automatically checks if any budget threshold has been crossed:
+- Each budget has a configurable `alert_threshold` (50/75/80/90/100%, default 80%)
+- An email is sent when spending first crosses the threshold
+- A second email is sent if spending crosses 100% (over budget)
+- `last_notified_threshold` tracks which milestone was last emailed to prevent spam
+- If spending drops back below the threshold (e.g., transaction deleted), the notification resets
+
+**Signal wiring**: `budgets/apps.py` → `BudgetsConfig.ready()` connects `post_save`/`post_delete` on `Transaction` to `budgets/signals.py`.
+
 ## Email (OTP)
 
 Email is used for account verification and password reset OTPs.
