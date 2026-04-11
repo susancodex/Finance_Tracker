@@ -1,1 +1,1 @@
-web: cd backend && python manage.py migrate --run-syncdb && python manage.py collectstatic --no-input && gunicorn finance_tracker.wsgi:application --bind 0.0.0.0:$PORT --workers 2
+web: pip install -r backend/requirements.txt && cd backend && python manage.py migrate --run-syncdb && python manage.py collectstatic --no-input && gunicorn finance_tracker.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120

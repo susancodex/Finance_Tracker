@@ -80,7 +80,7 @@ A full-stack personal finance management web application built with **React + Vi
 ### Backend
 | Tool | Purpose |
 |------|---------|
-| Django 5 | Web framework |
+| Django 6 | Web framework |
 | Django REST Framework | REST API |
 | SimpleJWT | JWT authentication |
 | django-cors-headers | CORS handling |
@@ -144,12 +144,14 @@ Finance_Tracker/
 │   │   ├── serializers.py
 │   │   ├── views.py
 │   │   └── urls.py
-│   ├── build.sh                        # Render build script
+│   ├── build.sh                        # Render build script (Blueprint)
+│   ├── runtime.txt                     # Pins Python 3.12 on Render
 │   └── manage.py
 │
-├── render.yaml                         # Render deployment config (backend + frontend + DB)
-├── Procfile                            # Process definition (web: gunicorn)
-└── .env.example                        # All environment variable reference (backend + frontend)
+├── render.yaml                         # Render Blueprint config (backend + frontend + DB)
+├── Procfile                            # Render manual web service config
+├── requirements.txt                    # Root-level requirements (mirrors backend)
+└── .env.example                        # All environment variable reference
 ```
 
 ---
@@ -214,9 +216,9 @@ OTP emails are sent via Gmail SMTP. Configure the following environment variable
 | `EMAIL_HOST_USER` | Gmail address | `you@gmail.com` |
 | `EMAIL_HOST_PASSWORD` | Gmail App Password | `abcd efgh ijkl mnop` |
 | `DEFAULT_FROM_EMAIL` | Sender display name | `Finance Tracker <you@gmail.com>` |
-| `EMAIL_USE_SSL` | Use SSL instead of TLS | `false` (default) |
+| `EMAIL_USE_SSL` | Use SSL instead of TLS | `false` (default — port 587 with STARTTLS) |
 
-> **Gmail tip:** Generate an [App Password](https://myaccount.google.com/apppasswords) under your Google account — never use your regular Gmail password.
+> **Gmail tip:** Generate an [App Password](https://myaccount.google.com/apppasswords) under your Google account — never use your regular Gmail password. 2-Step Verification must be enabled on your Google account first.
 
 ### Development (no SMTP credentials)
 When `EMAIL_HOST_PASSWORD` is not set, the app automatically switches to console mode:
@@ -228,20 +230,16 @@ When `EMAIL_HOST_PASSWORD` is not set, the app automatically switches to console
 
 ## Deployment (Render)
 
-The project is configured for one-command deployment on [Render](https://render.com) via `render.yaml`.
+The project supports two deployment approaches on [Render](https://render.com).
 
-### Services deployed
-| Service | Type | Details |
-|---------|------|---------|
-| `finance-tracker-backend` | Web Service | Python 3.12, Gunicorn, auto-migrates on deploy |
-| `finance-tracker-frontend` | Static Site | Vite build, served with cache headers |
-| PostgreSQL | Managed DB | Auto-provisioned and linked to backend |
+### Option A — Blueprint (recommended)
 
-### Steps
+Uses `render.yaml` to create all services automatically.
+
 1. Push the repo to GitHub
 2. In Render dashboard → **New** → **Blueprint** → connect your repo
-3. Render reads `render.yaml` and creates all services automatically
-4. After deploy, set these environment variables in the backend service:
+3. Render reads `render.yaml` and provisions the backend, frontend, and PostgreSQL database
+4. After the first deploy, go to the **finance-tracker-backend** service → **Environment** and add:
 
 | Variable | Value |
 |----------|-------|
@@ -249,7 +247,25 @@ The project is configured for one-command deployment on [Render](https://render.
 | `EMAIL_HOST_PASSWORD` | your Gmail App Password |
 | `DEFAULT_FROM_EMAIL` | `Finance Tracker <you@gmail.com>` |
 
-The `SECRET_KEY` and `DATABASE_URL` are generated/linked automatically by Render.
+> `SECRET_KEY` and `DATABASE_URL` are generated/linked automatically. `CORS_ALLOWED_ORIGINS` in `render.yaml` is pre-set to `https://finance-tracker-frontend.onrender.com` — update it if your service names differ.
+
+### Option B — Manual Web Service
+
+If you create services manually in Render (without Blueprint):
+
+**Backend Web Service:**
+- Environment: `Python`
+- Root directory: *(leave blank — project root)*
+- Build Command: `pip install --upgrade pip && pip install -r requirements.txt`
+- Start Command: `cd backend && python manage.py migrate --run-syncdb && python manage.py collectstatic --no-input && gunicorn finance_tracker.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120`
+- Python Version: `3.12.0`
+- Add all environment variables from `.env.example`
+
+**Frontend Static Site:**
+- Root directory: `frontend`
+- Build Command: `npm install && npm run build`
+- Publish directory: `dist`
+- Add env var: `VITE_API_URL` = your backend URL (e.g. `https://finance-tracker-backend.onrender.com`)
 
 ---
 
