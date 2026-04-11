@@ -147,9 +147,9 @@ Finance_Tracker/
 │   ├── build.sh                        # Render build script
 │   └── manage.py
 │
-├── render.yaml                         # Render deployment config
+├── render.yaml                         # Render deployment config (backend + frontend + DB)
 ├── Procfile                            # Process definition (web: gunicorn)
-└── .env.example                        # Environment variable reference
+└── .env.example                        # All environment variable reference (backend + frontend)
 ```
 
 ---
