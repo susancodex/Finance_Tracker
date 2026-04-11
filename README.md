@@ -2,15 +2,24 @@
 
 A full-stack personal finance management web application built with **React + Vite** (frontend) and **Django REST Framework** (backend). Track income and expenses, manage categories, set monthly budget limits, and work toward financial goals — all from a clean, mobile-friendly interface.
 
+**Author:** Susan Acharya
+
 ---
 
 ## Features
 
 ### Authentication & Security
-- **JWT Authentication** — Secure login with access and refresh tokens
-- **Email OTP Verification** — New accounts require a 6-digit OTP before activation
+- **JWT Authentication** — Secure login with access and refresh tokens; silent token refresh on expiry
+- **Email OTP Verification** — New accounts require a 6-digit OTP before activation (valid 10 minutes)
 - **Forgot Password via OTP** — Reset password with a code sent to your registered email
-- **Real email delivery** — OTPs sent through Gmail SMTP (no console fallback in production)
+- **HTML email templates** — OTP emails use a branded HTML layout with a plain-text fallback
+- **Console mode (dev)** — When no SMTP password is set, OTPs print to the backend console and are returned in the API response for easy local testing
+
+### Registration
+- Client-side validation: required email, minimum 6-character password, matching confirm password
+- Password show/hide toggle
+- Clear, field-level error messages from the backend (duplicate email, weak password, etc.)
+- Descriptive network-error feedback when the server is unreachable
 
 ### Dashboard
 - Net balance, total income, total expenses at a glance
@@ -71,12 +80,14 @@ A full-stack personal finance management web application built with **React + Vi
 ### Backend
 | Tool | Purpose |
 |------|---------|
-| Django 6 | Web framework |
+| Django 5 | Web framework |
 | Django REST Framework | REST API |
 | SimpleJWT | JWT authentication |
 | django-cors-headers | CORS handling |
 | Pillow | Profile image processing |
-| SQLite | Database |
+| Gunicorn | WSGI server (production) |
+| SQLite | Database (development) |
+| PostgreSQL | Database (production / Render) |
 
 ---
 
@@ -89,13 +100,13 @@ Finance_Tracker/
 │       ├── api/
 │       │   └── axios.js                # Axios instance with JWT interceptors
 │       ├── contexts/
-│       │   ├── AuthContext.jsx         # Auth state (login, logout, user)
+│       │   ├── AuthContext.jsx         # Auth state (login, logout, register, user)
 │       │   └── ToastContext.jsx        # Global toast notification system
 │       ├── layouts/
 │       │   └── AppLayout.jsx           # Sidebar + top bar + mobile bottom nav
 │       ├── pages/
 │       │   ├── Login.jsx
-│       │   ├── Register.jsx
+│       │   ├── Register.jsx            # Registration with client-side validation
 │       │   ├── VerifyEmail.jsx         # OTP email verification
 │       │   ├── ForgotPassword.jsx      # Request password reset OTP
 │       │   ├── ResetPassword.jsx       # Submit OTP + new password
@@ -111,29 +122,34 @@ Finance_Tracker/
 │       ├── App.jsx
 │       └── main.jsx
 │
-└── backend/
-    ├── finance_tracker/
-    │   ├── settings.py
-    │   └── urls.py
-    ├── users/                          # Custom user model, OTP auth
-    │   ├── models.py                   # CustomUser + OTPVerification
-    │   ├── serializers.py
-    │   ├── views.py
-    │   ├── urls.py
-    │   └── utils.py                    # OTP generation & email sending
-    ├── transactions/                   # Transaction model & CRUD API
-    ├── categories/                     # Category model & CRUD API
-    ├── budgets/                        # Budget model, spending calculation
-    │   ├── models.py
-    │   ├── serializers.py
-    │   ├── views.py
-    │   └── urls.py
-    ├── goals/                          # Financial goals model & CRUD API
-    │   ├── models.py
-    │   ├── serializers.py
-    │   ├── views.py
-    │   └── urls.py
-    └── manage.py
+├── backend/
+│   ├── finance_tracker/
+│   │   ├── settings.py                 # Env-driven config; supports SQLite & PostgreSQL
+│   │   └── urls.py
+│   ├── users/                          # Custom user model, OTP auth
+│   │   ├── models.py                   # CustomUser + OTPVerification
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── utils.py                    # OTP generation & HTML email sending
+│   ├── transactions/                   # Transaction model & CRUD API
+│   ├── categories/                     # Category model & CRUD API
+│   ├── budgets/                        # Budget model, spending calculation
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   ├── goals/                          # Financial goals model & CRUD API
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   ├── build.sh                        # Render build script
+│   └── manage.py
+│
+├── render.yaml                         # Render deployment config
+├── Procfile                            # Process definition (web: gunicorn)
+└── .env.example                        # Environment variable reference
 ```
 
 ---
@@ -150,30 +166,36 @@ git clone https://github.com/susanacharya12/Finance_Tracker.git
 cd Finance_Tracker
 ```
 
-### 2. Install backend dependencies
+### 2. Set up environment variables
 ```bash
-cd backend
-pip install django djangorestframework djangorestframework-simplejwt django-cors-headers Pillow gunicorn
+cp .env.example .env
+# Edit .env and fill in your values
 ```
 
-### 3. Run database migrations
+### 3. Install backend dependencies
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 4. Run database migrations
 ```bash
 python manage.py migrate
 ```
 
-### 4. Install frontend dependencies
+### 5. Install frontend dependencies
 ```bash
 cd ../frontend
 npm install
 ```
 
-### 5. Start the backend
+### 6. Start the backend (terminal 1)
 ```bash
 cd backend
-python manage.py runserver localhost:8000
+python manage.py runserver 0.0.0.0:8000
 ```
 
-### 6. Start the frontend (in a new terminal)
+### 7. Start the frontend (terminal 2)
 ```bash
 cd frontend
 npm run dev
@@ -185,15 +207,49 @@ The app will be available at **http://localhost:5000**
 
 ## Email / OTP Setup
 
-OTP emails are delivered via Gmail SMTP. Set the following environment variables:
+OTP emails are sent via Gmail SMTP. Configure the following environment variables:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
+| `EMAIL_HOST_USER` | Gmail address | `you@gmail.com` |
 | `EMAIL_HOST_PASSWORD` | Gmail App Password | `abcd efgh ijkl mnop` |
+| `DEFAULT_FROM_EMAIL` | Sender display name | `Finance Tracker <you@gmail.com>` |
+| `EMAIL_USE_SSL` | Use SSL instead of TLS | `false` (default) |
 
-The host, port, and sender address are already configured in `settings.py` for Gmail (`smtp.gmail.com:587`).
+> **Gmail tip:** Generate an [App Password](https://myaccount.google.com/apppasswords) under your Google account — never use your regular Gmail password.
 
-> **Gmail tip**: Use an [App Password](https://myaccount.google.com/apppasswords) — never your regular account password.
+### Development (no SMTP credentials)
+When `EMAIL_HOST_PASSWORD` is not set, the app automatically switches to console mode:
+- The OTP is printed to the backend terminal
+- The OTP is also returned in the registration / forgot-password API response so you can paste it directly into the verification form
+- No real emails are sent
+
+---
+
+## Deployment (Render)
+
+The project is configured for one-command deployment on [Render](https://render.com) via `render.yaml`.
+
+### Services deployed
+| Service | Type | Details |
+|---------|------|---------|
+| `finance-tracker-backend` | Web Service | Python 3.12, Gunicorn, auto-migrates on deploy |
+| `finance-tracker-frontend` | Static Site | Vite build, served with cache headers |
+| PostgreSQL | Managed DB | Auto-provisioned and linked to backend |
+
+### Steps
+1. Push the repo to GitHub
+2. In Render dashboard → **New** → **Blueprint** → connect your repo
+3. Render reads `render.yaml` and creates all services automatically
+4. After deploy, set these environment variables in the backend service:
+
+| Variable | Value |
+|----------|-------|
+| `EMAIL_HOST_USER` | your Gmail address |
+| `EMAIL_HOST_PASSWORD` | your Gmail App Password |
+| `DEFAULT_FROM_EMAIL` | `Finance Tracker <you@gmail.com>` |
+
+The `SECRET_KEY` and `DATABASE_URL` are generated/linked automatically by Render.
 
 ---
 
@@ -204,11 +260,11 @@ The host, port, and sender address are already configured in `settings.py` for G
 |--------|----------|------|-------------|
 | POST | `/api/token/` | No | Obtain JWT access & refresh tokens |
 | POST | `/api/token/refresh/` | No | Refresh access token |
-| POST | `/api/users/` | No | Register new user (sends OTP) |
+| POST | `/api/users/` | No | Register new user (triggers OTP email) |
 | GET / PATCH | `/api/users/me/` | Yes | Get or update current user profile |
 | POST | `/api/change-password/` | Yes | Change password |
 | POST | `/api/verify-email/` | No | Verify email with OTP |
-| POST | `/api/resend-otp/` | No | Resend OTP |
+| POST | `/api/resend-otp/` | No | Resend verification OTP |
 | POST | `/api/forgot-password/` | No | Request password reset OTP |
 | POST | `/api/reset-password/` | No | Reset password using OTP |
 
@@ -216,28 +272,28 @@ The host, port, and sender address are already configured in `settings.py` for G
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET / POST | `/api/categories/` | Yes | List or create categories |
-| GET / PUT / DELETE | `/api/categories/{id}/` | Yes | Retrieve, update, or delete a category |
+| GET / PUT / DELETE | `/api/categories/{id}/` | Yes | Retrieve, update, or delete |
 
 ### Transactions
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET / POST | `/api/transactions/` | Yes | List or create transactions |
-| GET / PUT / DELETE | `/api/transactions/{id}/` | Yes | Retrieve, update, or delete a transaction |
+| GET / PUT / DELETE | `/api/transactions/{id}/` | Yes | Retrieve, update, or delete |
 
 ### Budgets
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET / POST | `/api/budgets/` | Yes | List or create budgets |
-| GET / PUT / DELETE | `/api/budgets/{id}/` | Yes | Retrieve, update, or delete a budget |
-| GET | `/api/budgets/with-spending/?month=YYYY-MM` | Yes | List budgets with calculated spending for a given month |
+| GET / PUT / DELETE | `/api/budgets/{id}/` | Yes | Retrieve, update, or delete |
+| GET | `/api/budgets/with-spending/?month=YYYY-MM` | Yes | Budgets with calculated spending |
 
 ### Goals
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET / POST | `/api/goals/` | Yes | List or create goals |
-| GET / PUT / DELETE | `/api/goals/{id}/` | Yes | Retrieve, update, or delete a goal |
+| GET / PUT / DELETE | `/api/goals/{id}/` | Yes | Retrieve, update, or delete |
 
-### Authentication header (for all protected endpoints)
+### Authentication header (all protected endpoints)
 ```
 Authorization: Bearer <access_token>
 ```
@@ -247,16 +303,17 @@ Authorization: Bearer <access_token>
 ## OTP Flow
 
 ### Registration
-1. User submits registration form → account created with `is_active = False`
-2. 6-digit OTP emailed (valid for **10 minutes**)
-3. User enters OTP at `/verify-email` → account activated
-4. User can now log in
+1. User fills the registration form — client validates email, password length, and password match
+2. Account created with `is_active = False`
+3. 6-digit OTP emailed (or printed to console in dev mode)
+4. User enters OTP at `/verify-email` → account activated
+5. User can now log in
 
 ### Forgot Password
-1. User submits email at `/forgot-password`
+1. User submits their email at `/forgot-password`
 2. 6-digit OTP emailed (valid for **10 minutes**)
 3. User enters OTP + new password at `/reset-password`
-4. Password updated, login available immediately
+4. Password updated; login available immediately
 
 ---
 
@@ -265,12 +322,21 @@ Authorization: Bearer <access_token>
 ### CustomUser
 | Field | Type | Notes |
 |-------|------|-------|
-| email | EmailField | Unique, used for login |
+| email | EmailField | Unique; used as the login identifier |
 | username | CharField | Display name |
 | phone_number | CharField | Optional |
 | profile_picture | ImageField | Optional |
 | role | CharField | `user` or `admin` |
-| is_active | BooleanField | `False` until email verified |
+| is_active | BooleanField | `False` until email is verified |
+
+### OTPVerification
+| Field | Type | Notes |
+|-------|------|-------|
+| email | EmailField | Target address |
+| otp | CharField | 6-digit code |
+| otp_type | CharField | `registration` or `password_reset` |
+| created_at | DateTimeField | Used to enforce 10-minute expiry |
+| is_verified | BooleanField | Marked `True` after successful use |
 
 ### Budget
 | Field | Type | Notes |
