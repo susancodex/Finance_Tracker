@@ -5,7 +5,6 @@ databases:
     plan: free
 
 services:
-  # ── Backend: Django REST API ─────────────────────────────────────────────────
   - type: web
     name: finance-tracker-backend
     env: python
@@ -24,20 +23,13 @@ services:
         fromDatabase:
           name: finance-tracker-db
           property: connectionString
-      - key: EMAIL_BACKEND
-        value: smtp
-      - key: EMAIL_HOST
-        value: smtp.gmail.com
-      - key: EMAIL_PORT
-        value: "587"
-      - key: EMAIL_HOST_USER
-        sync: false        # Set to your Gmail address
-      - key: EMAIL_HOST_PASSWORD
-        sync: false        # Set to your Gmail App Password
       - key: CORS_ALLOWED_ORIGINS
-        sync: false        # Set AFTER deploying frontend, e.g. https://finance-tracker-frontend.onrender.com
+        value: https://finance-tracker-frontend.onrender.com
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
 
-  # ── Frontend: React Static Site ──────────────────────────────────────────────
   - type: web
     name: finance-tracker-frontend
     env: static
@@ -51,4 +43,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        sync: false        # Set to backend URL: https://finance-tracker-backend.onrender.com
+        value: https://finance-tracker-backend.onrender.com

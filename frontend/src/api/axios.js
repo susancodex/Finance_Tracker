@@ -1,7 +1,5 @@
 import axios from 'axios'
 
-// In development: empty string so Vite proxy forwards /api/* to localhost:8000
-// In production on Render: set VITE_API_URL to your backend URL, e.g. https://finance-tracker-backend.onrender.com
 const BASE_URL = import.meta.env.VITE_API_URL || ''
 
 const api = axios.create({
