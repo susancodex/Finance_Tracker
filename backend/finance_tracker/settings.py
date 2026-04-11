@@ -137,10 +137,16 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Finance Tracker <onboarding@resend.dev>')
+
 _from_email_fallback = (
     f'Finance Tracker <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Finance Tracker <noreply@financetracker.com>'
 )
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _from_email_fallback)
+if RESEND_API_KEY:
+    DEFAULT_FROM_EMAIL = RESEND_FROM_EMAIL
+else:
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _from_email_fallback)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'
