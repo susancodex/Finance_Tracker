@@ -122,24 +122,22 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ── Email Configuration ───────────────────────────────────────────────────────
-_email_backend = os.environ.get('EMAIL_BACKEND', 'console')
-if _email_backend == 'smtp':
+EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', 'susanacharya.sp@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# Auto-switch to real SMTP when a password is available; fall back to console
+if EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS       = True
-EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-
-_from_email = os.environ.get('DEFAULT_FROM_EMAIL', '')
-if not _from_email and EMAIL_HOST_USER:
-    _from_email = f'Finance Tracker <{EMAIL_HOST_USER}>'
-elif not _from_email:
-    _from_email = 'Finance Tracker <noreply@financetracker.com>'
-DEFAULT_FROM_EMAIL = _from_email
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    f'Finance Tracker <{EMAIL_HOST_USER}>',
+)
 
 # ── Auth & JWT ────────────────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
