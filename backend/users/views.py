@@ -57,6 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
                         'Please go to the verification page and click "Resend code" to try again.'
                     ),
                     'redirect_verify': True,
+                    '_debug_email_error': email_error,
                 },
                 status=status.HTTP_201_CREATED,
             )
