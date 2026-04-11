@@ -114,19 +114,23 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS       = True
-EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', 'susanacharya.sp@gmail.com')
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# Port 465 uses SSL; port 587 uses STARTTLS
+_email_use_ssl = os.environ.get('EMAIL_USE_SSL', '').lower() in ('true', '1', 'yes')
+EMAIL_USE_SSL = _email_use_ssl
+EMAIL_USE_TLS = not _email_use_ssl  # mutually exclusive with SSL
 
 if EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-DEFAULT_FROM_EMAIL = os.environ.get(
-    'DEFAULT_FROM_EMAIL',
-    f'Finance Tracker <{EMAIL_HOST_USER}>',
+_from_email_fallback = (
+    f'Finance Tracker <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Finance Tracker <noreply@financetracker.com>'
 )
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _from_email_fallback)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'

@@ -8,19 +8,27 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
+  const [devOtp, setDevOtp] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      await api.post('/api/forgot-password/', { email })
+      const res = await api.post('/api/forgot-password/', { email })
+      if (res.data?.otp) setDevOtp(res.data.otp)
       setSent(true)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleContinue = () => {
+    const params = new URLSearchParams({ email })
+    if (devOtp) params.set('otp', devOtp)
+    navigate(`/reset-password?${params.toString()}`)
   }
 
   return (
@@ -46,11 +54,17 @@ export default function ForgotPassword() {
 
           {sent ? (
             <div className="space-y-4">
+              {devOtp && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm text-center">
+                  Dev mode — OTP auto-filled:{' '}
+                  <span className="font-mono font-bold tracking-widest">{devOtp}</span>
+                </div>
+              )}
               <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm text-center">
                 If an account with <strong>{email}</strong> exists, we've sent a reset code. Check your inbox.
               </div>
               <button
-                onClick={() => navigate(`/reset-password?email=${encodeURIComponent(email)}`)}
+                onClick={handleContinue}
                 className="btn-primary w-full"
               >
                 Enter code →

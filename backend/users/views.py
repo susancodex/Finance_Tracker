@@ -202,26 +202,31 @@ class ForgotPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        from django.conf import settings as django_settings
+
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data['email']
 
+        otp_code = None
         if User.objects.filter(email=email, is_active=True).exists():
             try:
-                create_and_send_otp(email, 'password_reset')
+                otp_code = create_and_send_otp(email, 'password_reset')
             except Exception as e:
                 logger.error("Failed to send password reset OTP to %s: %s", email, e, exc_info=True)
 
-        return Response(
-            {
-                'detail': (
-                    'If an account with that email exists, '
-                    'a password reset OTP has been sent.'
-                )
-            },
-            status=status.HTTP_200_OK,
-        )
+        response_data = {
+            'detail': (
+                'If an account with that email exists, '
+                'a password reset OTP has been sent.'
+            )
+        }
+        using_console = 'console' in django_settings.EMAIL_BACKEND
+        if django_settings.DEBUG and using_console and otp_code:
+            response_data['otp'] = otp_code
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class ResetPasswordView(APIView):

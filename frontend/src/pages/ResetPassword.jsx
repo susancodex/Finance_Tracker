@@ -7,7 +7,7 @@ export default function ResetPassword() {
   const navigate = useNavigate()
 
   const [email, setEmail] = useState(searchParams.get('email') || '')
-  const [otp, setOtp] = useState('')
+  const [otp, setOtp] = useState(searchParams.get('otp') || '')
   const [newPassword, setNewPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -65,6 +65,8 @@ export default function ResetPassword() {
     }
   }
 
+  const devOtp = searchParams.get('otp')
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -80,6 +82,11 @@ export default function ResetPassword() {
         </div>
 
         <div className="card space-y-5">
+          {devOtp && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
+              Dev mode: OTP auto-filled. Enter your new password and submit.
+            </div>
+          )}
           {error && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
           )}
