@@ -4,24 +4,24 @@ import api from '../api/axios'
 
 export default function Profile() {
   const { user, fetchCurrentUser } = useAuth()
-  const [editing, setEditing]   = useState(false)
-  const [form, setForm]         = useState({ username: user?.username || '', phone_number: user?.phone_number || '' })
-  const [saving, setSaving]     = useState(false)
-  const [success, setSuccess]   = useState('')
-  const [error, setError]       = useState('')
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({ username: user?.username || '', phone_number: user?.phone_number || '' })
+  const [saving, setSaving] = useState(false)
+  const [success, setSuccess] = useState('')
+  const [error, setError] = useState('')
 
   const [avatarPreview, setAvatarPreview] = useState(null)
-  const [avatarFile, setAvatarFile]       = useState(null)
+  const [avatarFile, setAvatarFile] = useState(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [avatarError, setAvatarError]     = useState('')
+  const [avatarError, setAvatarError] = useState('')
   const fileInputRef = useRef(null)
 
-  const [pwForm, setPwForm]     = useState({ current_password: '', new_password: '', confirm_password: '' })
+  const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', confirm_password: '' })
   const [pwSaving, setPwSaving] = useState(false)
   const [pwSuccess, setPwSuccess] = useState('')
-  const [pwError, setPwError]   = useState('')
+  const [pwError, setPwError] = useState('')
 
-  const handleChange   = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
   const handlePwChange = (e) => setPwForm({ ...pwForm, [e.target.name]: e.target.value })
 
   const handleAvatarSelect = (e) => {

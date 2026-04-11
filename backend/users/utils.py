@@ -5,24 +5,20 @@ from .models import OTPVerification, generate_otp
 
 def send_otp_email(email, otp_code, otp_type):
     if otp_type == 'registration':
-        subject = 'Verify Your Email - Finance Tracker'
+        subject = 'Your Finance Tracker verification code'
         message = (
-            f"Hello,\n\n"
-            f"Thank you for registering with Finance Tracker!\n\n"
-            f"Your email verification OTP is: {otp_code}\n\n"
-            f"This OTP will expire in 10 minutes.\n\n"
-            f"If you did not register, please ignore this email.\n\n"
-            f"Best regards,\nFinance Tracker Team"
+            f"Hi,\n\n"
+            f"Your email verification code is: {otp_code}\n\n"
+            f"It expires in 10 minutes. If you didn't sign up, ignore this.\n\n"
+            f"— Finance Tracker"
         )
     else:
-        subject = 'Password Reset OTP - Finance Tracker'
+        subject = 'Your Finance Tracker password reset code'
         message = (
-            f"Hello,\n\n"
-            f"We received a request to reset your Finance Tracker password.\n\n"
-            f"Your password reset OTP is: {otp_code}\n\n"
-            f"This OTP will expire in 10 minutes.\n\n"
-            f"If you did not request this, please ignore this email.\n\n"
-            f"Best regards,\nFinance Tracker Team"
+            f"Hi,\n\n"
+            f"Your password reset code is: {otp_code}\n\n"
+            f"It expires in 10 minutes. If you didn't request this, ignore this email.\n\n"
+            f"— Finance Tracker"
         )
 
     send_mail(

@@ -43,11 +43,10 @@ export default function Login() {
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-600/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Main content — centered, Facebook-style */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
 
-          {/* ── Left: Brand / Tagline ── */}
+          {/* left side — brand */}
           <div className="lg:flex-1 text-center lg:text-left animate-fade-in-up">
             {/* Logo */}
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
@@ -62,7 +61,6 @@ export default function Login() {
               </span>
             </div>
 
-            {/* Tagline — large, Facebook-style */}
             <h1 className="font-display text-4xl lg:text-5xl font-black text-slate-100 leading-tight mb-4">
               Your money,<br />
               <span className="text-emerald-400">under control.</span>
@@ -93,7 +91,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* ── Right: Login Card ── */}
+          {/* login card */}
           <div className="w-full lg:w-[400px] shrink-0 animate-fade-in-up-delay-1">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/50 p-8">
 
@@ -154,7 +152,6 @@ export default function Login() {
                 </button>
               </form>
 
-              {/* Forgot password — centered, below button (Facebook style) */}
               <div className="mt-4 text-center">
                 <Link
                   to="/forgot-password"

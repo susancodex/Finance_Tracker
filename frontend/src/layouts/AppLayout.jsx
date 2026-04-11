@@ -60,7 +60,6 @@ const allNavItems = [
   },
 ]
 
-// Only 5 items in bottom bar (Categories accessible via sidebar/hamburger)
 const bottomNavItems = allNavItems.filter(n => n.to !== '/categories')
 
 export default function AppLayout() {
