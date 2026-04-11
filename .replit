@@ -56,8 +56,8 @@ externalPort = 8000
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "gunicorn --bind=0.0.0.0:5000 --reuse-port finance_tracker.wsgi:application & python manage.py migrate --run-syncdb"]
-build = ["bash", "-c", "npm run build"]
+run = ["bash", "-c", "cd backend && python manage.py migrate --run-syncdb && gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=2 finance_tracker.wsgi:application"]
+build = ["bash", "-c", "cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt && python manage.py collectstatic --no-input"]
 
 [userenv]
 
