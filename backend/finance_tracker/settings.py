@@ -143,7 +143,10 @@ RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Finance Tracker <onboar
 _from_email_fallback = (
     f'Finance Tracker <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Finance Tracker <noreply@financetracker.com>'
 )
-if RESEND_API_KEY:
+# Gmail SMTP takes priority when EMAIL_HOST_PASSWORD is set; Resend is fallback
+if EMAIL_HOST_PASSWORD:
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _from_email_fallback)
+elif RESEND_API_KEY:
     DEFAULT_FROM_EMAIL = RESEND_FROM_EMAIL
 else:
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _from_email_fallback)

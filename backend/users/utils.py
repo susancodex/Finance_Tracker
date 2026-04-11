@@ -60,9 +60,42 @@ def _build_email_html(otp_code, otp_type):
 </html>"""
 
 
-def send_otp_email(email, otp_code, otp_type):
+def _send_via_resend_or_smtp(to_email, subject, plain, html):
+    smtp_password = os.environ.get('EMAIL_HOST_PASSWORD', '')
     resend_api_key = os.environ.get('RESEND_API_KEY', '')
 
+    if smtp_password:
+        from django.core.mail import EmailMultiAlternatives
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=plain,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email],
+        )
+        msg.attach_alternative(html, 'text/html')
+        msg.send(fail_silently=False)
+    elif resend_api_key:
+        resend.api_key = resend_api_key
+        resend.Emails.send(resend.Emails.SendParams(**{
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [to_email],
+            "subject": subject,
+            "html": html,
+            "text": plain,
+        }))
+    else:
+        from django.core.mail import EmailMultiAlternatives
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=plain,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email],
+        )
+        msg.attach_alternative(html, 'text/html')
+        msg.send(fail_silently=False)
+
+
+def send_otp_email(email, otp_code, otp_type):
     if otp_type == 'registration':
         subject = 'Your Finance Tracker verification code'
         plain = (
@@ -81,31 +114,10 @@ def send_otp_email(email, otp_code, otp_type):
         )
 
     html = _build_email_html(otp_code, otp_type)
-
-    if resend_api_key:
-        resend.api_key = resend_api_key
-        resend.Emails.send(resend.Emails.SendParams(**{
-            "from": settings.DEFAULT_FROM_EMAIL,
-            "to": [email],
-            "subject": subject,
-            "html": html,
-            "text": plain,
-        }))
-    else:
-        from django.core.mail import EmailMultiAlternatives
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=plain,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email],
-        )
-        msg.attach_alternative(html, 'text/html')
-        msg.send(fail_silently=False)
+    _send_via_resend_or_smtp(email, subject, plain, html)
 
 
 def send_budget_alert_email(email, user_name, category_name, budget_amount, spent_amount, percentage, milestone, month):
-    resend_api_key = os.environ.get('RESEND_API_KEY', '')
-
     from datetime import datetime
     month_label = datetime.strptime(month, '%Y-%m').strftime('%B %Y')
 
@@ -198,25 +210,7 @@ def send_budget_alert_email(email, user_name, category_name, budget_amount, spen
 </body>
 </html>"""
 
-    if resend_api_key:
-        resend.api_key = resend_api_key
-        resend.Emails.send(resend.Emails.SendParams(**{
-            "from": settings.DEFAULT_FROM_EMAIL,
-            "to": [email],
-            "subject": subject,
-            "html": html,
-            "text": plain,
-        }))
-    else:
-        from django.core.mail import EmailMultiAlternatives
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=plain,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email],
-        )
-        msg.attach_alternative(html, 'text/html')
-        msg.send(fail_silently=False)
+    _send_via_resend_or_smtp(email, subject, plain, html)
 
 
 def create_and_send_otp(email, otp_type):
