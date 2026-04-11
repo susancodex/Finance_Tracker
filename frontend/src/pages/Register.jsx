@@ -45,15 +45,25 @@ export default function Register() {
         email: form.email,
         password: form.password,
       })
-      setSuccess('Account created! Redirecting to email verification...')
+
       const params = new URLSearchParams({ email: form.email })
       if (data?.otp) params.set('otp', data.otp)
-      setTimeout(() => navigate(`/verify-email?${params.toString()}`), 1500)
+
+      if (data?.redirect_verify) {
+        setSuccess('Account created! However, we could not send the verification email right now. Redirecting — please use "Resend code" on the next page.')
+      } else {
+        setSuccess('Account created! Redirecting to email verification...')
+      }
+      setTimeout(() => navigate(`/verify-email?${params.toString()}`), 2000)
     } catch (err) {
       const responseData = err.response?.data
 
       if (!err.response) {
-        setError('Unable to connect. Please check your connection and try again.')
+        if (err.code === 'ECONNABORTED') {
+          setError('The server is waking up from sleep — this can take up to 60 seconds on free hosting. Please wait a moment and try again.')
+        } else {
+          setError('Unable to connect. Please check your connection and try again.')
+        }
         return
       }
 
