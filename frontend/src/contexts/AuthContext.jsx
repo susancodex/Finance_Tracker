@@ -7,6 +7,11 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Warm up the backend server on app load (important for free-tier cold starts)
+  useEffect(() => {
+    api.get('/api/health/').catch(() => {})
+  }, [])
+
   // Initialize auth state from localStorage
   useEffect(() => {
     const token = localStorage.getItem('access_token')
