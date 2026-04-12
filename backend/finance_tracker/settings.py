@@ -121,22 +121,36 @@ WHITENOISE_INDEX_FILE = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ── Email configuration (SendGrid) ────────────────────────────────────────────
-# SendGrid SMTP is the sole email provider. Gmail SMTP is not used anywhere.
+# ── Email configuration ────────────────────────────────────────────────────────
+# Reads all email settings from environment variables so any SMTP provider works
+# (Gmail, SendGrid, etc.). Set EMAIL_HOST_PASSWORD (or SENDGRID_API_KEY for
+# SendGrid) to enable real email delivery. Without a password the app falls back
+# to printing emails to the console (development only).
 #
-# IMPORTANT (Render deployment):
-#   Add SENDGRID_API_KEY in the Render dashboard under Environment → Variables.
-#   Also set DEFAULT_FROM_EMAIL to a sender address verified in your SendGrid account.
+# Gmail setup:
+#   EMAIL_HOST=smtp.gmail.com  EMAIL_PORT=587  EMAIL_USE_TLS=true
+#   EMAIL_HOST_USER=you@gmail.com  EMAIL_HOST_PASSWORD=<Gmail App Password>
+#   DEFAULT_FROM_EMAIL="Your Name <you@gmail.com>"
 #
-# Local development without SENDGRID_API_KEY: emails print to the console.
+# SendGrid setup:
+#   EMAIL_HOST=smtp.sendgrid.net  EMAIL_PORT=587  EMAIL_USE_TLS=true
+#   EMAIL_HOST_USER=apikey  EMAIL_HOST_PASSWORD=<SENDGRID_API_KEY>
 # ──────────────────────────────────────────────────────────────────────────────
 
-EMAIL_HOST          = 'smtp.sendgrid.net'
-EMAIL_PORT          = 587
-EMAIL_USE_TLS       = True
-EMAIL_HOST_USER     = 'apikey'
-EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY', '')
-EMAIL_TIMEOUT       = 15
+_sendgrid_key = os.environ.get('SENDGRID_API_KEY', '')
+
+EMAIL_HOST     = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net' if _sendgrid_key else 'smtp.gmail.com')
+EMAIL_PORT     = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS  = os.environ.get('EMAIL_USE_TLS', 'true').lower() not in ('false', '0', 'no')
+EMAIL_USE_SSL  = os.environ.get('EMAIL_USE_SSL', 'false').lower() not in ('false', '0', 'no')
+EMAIL_TIMEOUT  = 15
+
+if _sendgrid_key:
+    EMAIL_HOST_USER     = 'apikey'
+    EMAIL_HOST_PASSWORD = _sendgrid_key
+else:
+    EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 DEFAULT_FROM_EMAIL = os.environ.get(
     'DEFAULT_FROM_EMAIL', 'Finance Tracker <noreply@financetracker.com>'
@@ -147,11 +161,9 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Startup validation — warn loudly if the key is missing in production
 if not DEBUG and not EMAIL_HOST_PASSWORD:
-    print("ERROR: SENDGRID_API_KEY is not set! "
-          "OTP emails will NOT be delivered. "
-          "Add SENDGRID_API_KEY in the Render dashboard → Environment.")
+    print("WARNING: No email password set (EMAIL_HOST_PASSWORD or SENDGRID_API_KEY). "
+          "OTP emails will NOT be delivered.")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'
