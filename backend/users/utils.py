@@ -1,7 +1,11 @@
 import os
+import logging
+import traceback
 import resend
 from django.conf import settings
 from .models import OTPVerification, generate_otp
+
+logger = logging.getLogger(__name__)
 
 
 def _build_email_html(otp_code, otp_type):
@@ -63,27 +67,49 @@ def _build_email_html(otp_code, otp_type):
 def _send_via_resend_or_smtp(to_email, subject, plain, html):
     smtp_password = os.environ.get('EMAIL_HOST_PASSWORD', '')
     resend_api_key = os.environ.get('RESEND_API_KEY', '')
+    smtp_user = os.environ.get('EMAIL_HOST_USER', '')
+
+    print("Sending email to:", to_email)
+    print("EMAIL_HOST_USER:", smtp_user)
+    print("EMAIL_HOST_PASSWORD set:", bool(smtp_password))
+    print("RESEND_API_KEY set:", bool(resend_api_key))
 
     if smtp_password:
-        from django.core.mail import EmailMultiAlternatives
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body=plain,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[to_email],
-        )
-        msg.attach_alternative(html, 'text/html')
-        msg.send(fail_silently=False)
+        print("Using SMTP (Gmail) backend")
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            msg = EmailMultiAlternatives(
+                subject=subject,
+                body=plain,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[to_email],
+            )
+            msg.attach_alternative(html, 'text/html')
+            msg.send(fail_silently=False)
+            print("Email sent successfully via SMTP")
+        except Exception as e:
+            logger.error("SMTP email failed to %s: %s", to_email, str(e))
+            traceback.print_exc()
+            raise
     elif resend_api_key:
-        resend.api_key = resend_api_key
-        resend.Emails.send(resend.Emails.SendParams(**{
-            "from": settings.DEFAULT_FROM_EMAIL,
-            "to": [to_email],
-            "subject": subject,
-            "html": html,
-            "text": plain,
-        }))
+        print("Using Resend backend")
+        try:
+            resend.api_key = resend_api_key
+            resend.Emails.send(resend.Emails.SendParams(**{
+                "from": settings.DEFAULT_FROM_EMAIL,
+                "to": [to_email],
+                "subject": subject,
+                "html": html,
+                "text": plain,
+            }))
+            print("Email sent successfully via Resend")
+        except Exception as e:
+            logger.error("Resend email failed to %s: %s", to_email, str(e))
+            traceback.print_exc()
+            raise
     else:
+        print("WARNING: No EMAIL_HOST_PASSWORD or RESEND_API_KEY set — falling back to console backend")
+        logger.warning("No email credentials configured. Email will be printed to console, not sent.")
         from django.core.mail import EmailMultiAlternatives
         msg = EmailMultiAlternatives(
             subject=subject,

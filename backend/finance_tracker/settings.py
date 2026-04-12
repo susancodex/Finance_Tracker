@@ -121,6 +121,15 @@ WHITENOISE_INDEX_FILE = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ── Email configuration ────────────────────────────────────────────────────────
+# IMPORTANT (Render deployment):
+#   Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in the Render dashboard under
+#   Environment → Environment Variables.
+#   Do NOT use your normal Gmail password — generate a Gmail App Password at:
+#   https://myaccount.google.com/apppasswords
+#   Leave EMAIL_HOST_PASSWORD empty to fall back to console mode (dev only).
+# ──────────────────────────────────────────────────────────────────────────────
+
 EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
@@ -136,6 +145,13 @@ if EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Startup validation — warn loudly if email credentials are missing in production
+if not DEBUG:
+    if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+        print("ERROR: Email environment variables missing! "
+              "Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in Render dashboard. "
+              "OTP emails will NOT be delivered until these are configured.")
 
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Finance Tracker <onboarding@resend.dev>')
