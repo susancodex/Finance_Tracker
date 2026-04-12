@@ -121,51 +121,37 @@ WHITENOISE_INDEX_FILE = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ── Email configuration ────────────────────────────────────────────────────────
+# ── Email configuration (SendGrid) ────────────────────────────────────────────
+# SendGrid SMTP is the sole email provider. Gmail SMTP is not used anywhere.
+#
 # IMPORTANT (Render deployment):
-#   Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in the Render dashboard under
-#   Environment → Environment Variables.
-#   Do NOT use your normal Gmail password — generate a Gmail App Password at:
-#   https://myaccount.google.com/apppasswords
-#   Leave EMAIL_HOST_PASSWORD empty to fall back to console mode (dev only).
+#   Add SENDGRID_API_KEY in the Render dashboard under Environment → Variables.
+#   Also set DEFAULT_FROM_EMAIL to a sender address verified in your SendGrid account.
+#
+# Local development without SENDGRID_API_KEY: emails print to the console.
 # ──────────────────────────────────────────────────────────────────────────────
 
-EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST          = 'smtp.sendgrid.net'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = 'apikey'
+EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY', '')
 EMAIL_TIMEOUT       = 15
 
-# Port 465 uses SSL; port 587 uses STARTTLS
-_email_use_ssl = os.environ.get('EMAIL_USE_SSL', '').lower() in ('true', '1', 'yes')
-EMAIL_USE_SSL = _email_use_ssl
-EMAIL_USE_TLS = not _email_use_ssl  # mutually exclusive with SSL
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL', 'Finance Tracker <noreply@financetracker.com>'
+)
 
 if EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Startup validation — warn loudly if email credentials are missing in production
-if not DEBUG:
-    if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
-        print("ERROR: Email environment variables missing! "
-              "Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD in Render dashboard. "
-              "OTP emails will NOT be delivered until these are configured.")
-
-RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
-RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Finance Tracker <onboarding@resend.dev>')
-
-_from_email_fallback = (
-    f'Finance Tracker <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'Finance Tracker <noreply@financetracker.com>'
-)
-# Gmail SMTP takes priority when EMAIL_HOST_PASSWORD is set; Resend is fallback
-if EMAIL_HOST_PASSWORD:
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _from_email_fallback)
-elif RESEND_API_KEY:
-    DEFAULT_FROM_EMAIL = RESEND_FROM_EMAIL
-else:
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _from_email_fallback)
+# Startup validation — warn loudly if the key is missing in production
+if not DEBUG and not EMAIL_HOST_PASSWORD:
+    print("ERROR: SENDGRID_API_KEY is not set! "
+          "OTP emails will NOT be delivered. "
+          "Add SENDGRID_API_KEY in the Render dashboard → Environment.")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'

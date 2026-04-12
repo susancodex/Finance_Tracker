@@ -1,0 +1,133 @@
+You are a senior Django backend + DevOps engineer.
+
+My Django project (Finance Tracker) has a critical production issue:
+
+CURRENT PROBLEM:
+- Email OTP works in Replit locally
+- Email OTP fails in Render deployment
+- System currently uses Gmail SMTP with App Password (which is unstable in production)
+- Logs show "Network is unreachable" and SMTP Gmail failures
+- Email system has fallback logic but is broken
+
+ROOT CAUSE:
+- Gmail SMTP is blocked/unreliable on Render
+- System still tries to use Gmail SMTP even though it's not production-safe
+- Resend API is not configured
+- Email system has no single reliable provider
+
+--------------------------------------------
+
+YOUR TASK:
+Migrate the entire email OTP system from Gmail SMTP to SendGrid.
+
+--------------------------------------------
+
+STEP 1: REMOVE GMAIL COMPLETELY
+
+- Delete all Gmail SMTP configuration:
+  - smtp.gmail.com
+  - EMAIL_HOST_USER Gmail logic
+  - EMAIL_HOST_PASSWORD (Gmail App Password usage)
+- Remove any fallback logic that uses Gmail
+- Ensure system does NOT reference Gmail anywhere
+
+--------------------------------------------
+
+STEP 2: IMPLEMENT SENDGRID EMAIL SYSTEM
+
+Use SendGrid as the ONLY email provider.
+
+Update settings.py:
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "apikey"
+EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY")
+
+--------------------------------------------
+
+STEP 3: UPDATE ENVIRONMENT VARIABLES
+
+Create/Update .env.example:
+
+SENDGRID_API_KEY=your_sendgrid_api_key
+
+In Render, require:
+
+SENDGRID_API_KEY=your_sendgrid_api_key
+
+--------------------------------------------
+
+STEP 4: FIX OTP EMAIL LOGIC
+
+Find OTP sending function and ensure:
+
+- It uses Django send_mail or EmailMessage normally
+- It NEVER calls Gmail SMTP logic
+- Add proper error handling:
+
+try:
+    send_mail(
+        subject,
+        message,
+        EMAIL_HOST_USER,
+        [email],
+        fail_silently=False
+    )
+    print("OTP sent successfully via SendGrid")
+except Exception as e:
+    import traceback
+    print("EMAIL ERROR:", str(e))
+    traceback.print_exc()
+
+--------------------------------------------
+
+STEP 5: FIX PRODUCTION BUGS
+
+Detect and fix:
+
+1. Missing environment variables in Render
+2. Old Gmail fallback still being triggered
+3. Silent failures hiding SMTP errors
+4. Wrong email backend selection logic
+
+--------------------------------------------
+
+STEP 6: ADD DEBUG LOGGING
+
+Add logs:
+
+print("EMAIL PROVIDER: SENDGRID")
+print("EMAIL_HOST_USER:", EMAIL_HOST_USER)
+print("SENDGRID API KEY SET:", bool(os.getenv("SENDGRID_API_KEY")))
+
+--------------------------------------------
+
+STEP 7: CLEAN ARCHITECTURE
+
+- Remove ALL Gmail-related code
+- Ensure only ONE email provider exists (SendGrid)
+- Remove any conditional email switching logic
+
+--------------------------------------------
+
+STEP 8: FINAL OUTPUT
+
+Provide:
+
+1. What was causing the issue (clear explanation)
+2. Updated settings.py (SendGrid only)
+3. Updated OTP email function
+4. Files changed summary
+5. Render environment variables required
+6. Confirmation that system will now work in production
+
+--------------------------------------------
+
+IMPORTANT RULES:
+- Do NOT keep Gmail SMTP anywhere
+- Do NOT use multiple email providers
+- Make system clean and production-ready
+- Ensure OTP works in both local and Render environments
