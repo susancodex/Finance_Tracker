@@ -27,14 +27,15 @@ services:
           name: finance-tracker-db
           property: connectionString
       - key: CORS_ALLOWED_ORIGINS
-        value: https://finance-tracker-frontend.onrender.com
+        value: https://finance-tracker-frontend-zeid.onrender.com
       # ── SendGrid email settings ──────────────────────────────────────────────
       # Set SENDGRID_API_KEY manually in the Render dashboard → Environment tab
       # (do NOT paste the key into this file)
       - key: SENDGRID_API_KEY
         sync: false
+      # Use your verified SendGrid Single Sender address here
       - key: DEFAULT_FROM_EMAIL
-        value: Finance Tracker <noreply@financetracker.com>
+        value: Susan Acharya <susanacharya.sp@gmail.com>
 
   - type: web
     name: finance-tracker-frontend
@@ -57,4 +58,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://finance-tracker-backend.onrender.com
+        value: https://finance-tracker-imbg.onrender.com

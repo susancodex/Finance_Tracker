@@ -71,7 +71,7 @@ build = ["bash", "-c", "cd frontend && npm install && npm run build && cd ../bac
 
 [userenv.shared]
 EMAIL_PORT = "587"
-DEFAULT_FROM_EMAIL = "Finance Tracker <noreply@financetracker.com>"
+DEFAULT_FROM_EMAIL = "Susan Acharya <susanacharya.sp@gmail.com>"
 EMAIL_HOST = "smtp.sendgrid.net"
 EMAIL_HOST_USER = "apikey"
 EMAIL_USE_TLS = "true"
