@@ -27,23 +27,14 @@ services:
           name: finance-tracker-db
           property: connectionString
       - key: CORS_ALLOWED_ORIGINS
-        value: ""
-      - key: EMAIL_HOST
-        value: smtp.gmail.com
-      - key: EMAIL_PORT
-        value: "587"
-      - key: EMAIL_USE_SSL
-        value: "false"
-      - key: EMAIL_USE_TLS
-        value: "true"
-      - key: EMAIL_TIMEOUT
-        value: "30"
-      - key: EMAIL_HOST_USER
-        value: susanacharya.sp@gmail.com
-      - key: EMAIL_HOST_PASSWORD
-        value: fdnyjmchrvqw
+        value: https://finance-tracker-frontend.onrender.com
+      # ── SendGrid email settings ──────────────────────────────────────────────
+      # Set SENDGRID_API_KEY manually in the Render dashboard → Environment tab
+      # (do NOT paste the key into this file)
+      - key: SENDGRID_API_KEY
+        sync: false
       - key: DEFAULT_FROM_EMAIL
-        value: Finance Tracker <susanacharya.sp@gmail.com>
+        value: Finance Tracker <noreply@financetracker.com>
 
   - type: web
     name: finance-tracker-frontend
