@@ -41,9 +41,6 @@ A full-stack personal finance management web application built with **React + Vi
 ### Budget Limits
 - Set a monthly spending cap per expense category
 - Live progress bar showing spent vs. limit
-- Color-coded alerts: green (safe), orange (near limit), red (over budget)
-- Month navigation with prev/next arrows
-- Summary totals: total limit, total spent, over-budget count
 
 ### Financial Goals
 - Create savings goals with a name, target amount, and optional deadline
