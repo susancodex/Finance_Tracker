@@ -10,13 +10,14 @@ A full-stack personal finance management web application built with **React + Vi
 
 ### Authentication & Security
 - **JWT Authentication** — Secure login with access and refresh tokens; silent token refresh on expiry
-- **Email OTP Verification** — New accounts require a 6-digit OTP before activation (valid 10 minutes)
-- **Forgot Password via OTP** — Reset password with a code sent to your registered email
-- **HTML email templates** — OTP emails use a branded HTML layout with a plain-text fallback
-- **Console mode (dev)** — When no SMTP password is set, OTPs print to the backend console and are returned in the API response for easy local testing
+- **Simple signup** — Register with full name, email, and password; log in immediately with no extra steps
+- **Strong password validation** — Minimum 8 characters with Django's built-in password strength checks
+- **Secure password hashing** — Passwords are never stored in plain text
 
-### Registration
-- Client-side validation: required email, minimum 6-character password, matching confirm password
+### Registration & Login
+- Signup form: full name, email, password, confirm password
+- Login form: email and password only
+- Client-side validation: required fields, 8-character minimum, matching passwords
 - Password show/hide toggle
 - Clear, field-level error messages from the backend (duplicate email, weak password, etc.)
 - Descriptive network-error feedback when the server is unreachable
@@ -53,7 +54,7 @@ A full-stack personal finance management web application built with **React + Vi
 - Status: Active, Completed, or Cancelled
 
 ### Profile
-- Edit username and phone number
+- Edit full name and phone number
 - Upload a profile picture
 - Change password from within the app
 
@@ -105,11 +106,8 @@ Finance_Tracker/
 │       ├── layouts/
 │       │   └── AppLayout.jsx           # Sidebar + top bar + mobile bottom nav
 │       ├── pages/
-│       │   ├── Login.jsx
-│       │   ├── Register.jsx            # Registration with client-side validation
-│       │   ├── VerifyEmail.jsx         # OTP email verification
-│       │   ├── ForgotPassword.jsx      # Request password reset OTP
-│       │   ├── ResetPassword.jsx       # Submit OTP + new password
+│       │   ├── Login.jsx               # Email + password login
+│       │   ├── Register.jsx            # Full name, email, password signup
 │       │   ├── Dashboard.jsx           # Overview & stats
 │       │   ├── Transactions.jsx        # Income & expense log
 │       │   ├── Categories.jsx          # Category management
@@ -126,12 +124,12 @@ Finance_Tracker/
 │   ├── finance_tracker/
 │   │   ├── settings.py                 # Env-driven config; supports SQLite & PostgreSQL
 │   │   └── urls.py
-│   ├── users/                          # Custom user model, OTP auth
-│   │   ├── models.py                   # CustomUser + OTPVerification
-│   │   ├── serializers.py
-│   │   ├── views.py
+│   ├── users/                          # Custom user model & auth
+│   │   ├── models.py                   # CustomUser
+│   │   ├── serializers.py              # Register & user serializers
+│   │   ├── views.py                    # Register, profile, change password
 │   │   ├── urls.py
-│   │   └── utils.py                    # OTP generation & HTML email sending
+│   │   └── utils.py                    # Budget alert email sending
 │   ├── transactions/                   # Transaction model & CRUD API
 │   ├── categories/                     # Category model & CRUD API
 │   ├── budgets/                        # Budget model, spending calculation
@@ -207,24 +205,20 @@ The app will be available at **http://localhost:5000**
 
 ---
 
-## Email / OTP Setup
+## Email Setup (Budget Alerts)
 
-OTP emails are sent via Gmail SMTP. Configure the following environment variables:
+Email is used only for budget alert notifications. Configure the following environment variables to enable real email delivery:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `EMAIL_HOST_USER` | Gmail address | `you@gmail.com` |
-| `EMAIL_HOST_PASSWORD` | Gmail App Password | `abcd efgh ijkl mnop` |
+| `EMAIL_HOST_USER` | SMTP username / Gmail address | `you@gmail.com` |
+| `EMAIL_HOST_PASSWORD` | SMTP password / Gmail App Password | `abcd efgh ijkl mnop` |
 | `DEFAULT_FROM_EMAIL` | Sender display name | `Finance Tracker <you@gmail.com>` |
-| `EMAIL_USE_SSL` | Use SSL instead of TLS | `false` (default — port 587 with STARTTLS) |
 
 > **Gmail tip:** Generate an [App Password](https://myaccount.google.com/apppasswords) under your Google account — never use your regular Gmail password. 2-Step Verification must be enabled on your Google account first.
 
 ### Development (no SMTP credentials)
-When `EMAIL_HOST_PASSWORD` is not set, the app automatically switches to console mode:
-- The OTP is printed to the backend terminal
-- The OTP is also returned in the registration / forgot-password API response so you can paste it directly into the verification form
-- No real emails are sent
+When `EMAIL_HOST_PASSWORD` is not set, the app automatically switches to console mode — budget alert emails are printed to the backend terminal instead of being sent.
 
 ---
 
@@ -239,13 +233,7 @@ Uses `render.yaml` to create all services automatically.
 1. Push the repo to GitHub
 2. In Render dashboard → **New** → **Blueprint** → connect your repo
 3. Render reads `render.yaml` and provisions the backend, frontend, and PostgreSQL database
-4. After the first deploy, go to the **finance-tracker-backend** service → **Environment** and add:
-
-| Variable | Value |
-|----------|-------|
-| `EMAIL_HOST_USER` | your Gmail address |
-| `EMAIL_HOST_PASSWORD` | your Gmail App Password |
-| `DEFAULT_FROM_EMAIL` | `Finance Tracker <you@gmail.com>` |
+4. After the first deploy, go to the **finance-tracker-backend** service → **Environment** and optionally add email credentials for budget alerts
 
 > `SECRET_KEY` and `DATABASE_URL` are generated/linked automatically. `CORS_ALLOWED_ORIGINS` in `render.yaml` is pre-set to `https://finance-tracker-frontend.onrender.com` — update it if your service names differ.
 
@@ -274,15 +262,11 @@ If you create services manually in Render (without Blueprint):
 ### Auth & Users
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/api/token/` | No | Obtain JWT access & refresh tokens |
+| POST | `/api/token/` | No | Obtain JWT access & refresh tokens (login) |
 | POST | `/api/token/refresh/` | No | Refresh access token |
-| POST | `/api/users/` | No | Register new user (triggers OTP email) |
+| POST | `/api/users/` | No | Register new user |
 | GET / PATCH | `/api/users/me/` | Yes | Get or update current user profile |
 | POST | `/api/change-password/` | Yes | Change password |
-| POST | `/api/verify-email/` | No | Verify email with OTP |
-| POST | `/api/resend-otp/` | No | Resend verification OTP |
-| POST | `/api/forgot-password/` | No | Request password reset OTP |
-| POST | `/api/reset-password/` | No | Reset password using OTP |
 
 ### Categories
 | Method | Endpoint | Auth | Description |
@@ -316,43 +300,17 @@ Authorization: Bearer <access_token>
 
 ---
 
-## OTP Flow
-
-### Registration
-1. User fills the registration form — client validates email, password length, and password match
-2. Account created with `is_active = False`
-3. 6-digit OTP emailed (or printed to console in dev mode)
-4. User enters OTP at `/verify-email` → account activated
-5. User can now log in
-
-### Forgot Password
-1. User submits their email at `/forgot-password`
-2. 6-digit OTP emailed (valid for **10 minutes**)
-3. User enters OTP + new password at `/reset-password`
-4. Password updated; login available immediately
-
----
-
 ## Data Models
 
 ### CustomUser
 | Field | Type | Notes |
 |-------|------|-------|
 | email | EmailField | Unique; used as the login identifier |
-| username | CharField | Display name |
+| username | CharField | Full name |
 | phone_number | CharField | Optional |
 | profile_picture | ImageField | Optional |
 | role | CharField | `user` or `admin` |
-| is_active | BooleanField | `False` until email is verified |
-
-### OTPVerification
-| Field | Type | Notes |
-|-------|------|-------|
-| email | EmailField | Target address |
-| otp | CharField | 6-digit code |
-| otp_type | CharField | `registration` or `password_reset` |
-| created_at | DateTimeField | Used to enforce 10-minute expiry |
-| is_verified | BooleanField | Marked `True` after successful use |
+| is_active | BooleanField | `True` immediately after registration |
 
 ### Budget
 | Field | Type | Notes |
