@@ -39,3 +39,7 @@ Thumbs.db
 .cache/
 .upm/
 .pythonlibs/
+.local/
+.agents/
+replit.md
+attached_assets/
