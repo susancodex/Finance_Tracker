@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, OTPVerification
+from .models import CustomUser
 
 
 @admin.register(CustomUser)
@@ -23,11 +23,3 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('email', 'username', 'password1', 'password2', 'role', 'profile_picture', 'phone_number', 'is_staff', 'is_active'),
         }),
     )
-
-
-@admin.register(OTPVerification)
-class OTPVerificationAdmin(admin.ModelAdmin):
-    list_display = ('email', 'otp_type', 'otp', 'is_verified', 'created_at')
-    list_filter = ('otp_type', 'is_verified')
-    search_fields = ('email',)
-    ordering = ('-created_at',)

@@ -7,7 +7,7 @@ export default function Register() {
     username: '',
     email: '',
     password: '',
-    password2: '',
+    confirm_password: '',
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -25,42 +25,40 @@ export default function Register() {
     e.preventDefault()
     setError('')
 
+    if (!form.username.trim()) {
+      setError('Full name is required.')
+      return
+    }
     if (!form.email) {
       setError('Email address is required.')
       return
     }
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters.')
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters.')
       return
     }
-    if (form.password !== form.password2) {
+    if (form.password !== form.confirm_password) {
       setError('Passwords do not match.')
       return
     }
 
     setLoading(true)
     try {
-      const data = await register({
+      await register({
         username: form.username,
         email: form.email,
         password: form.password,
+        confirm_password: form.confirm_password,
       })
 
-      const params = new URLSearchParams({ email: form.email })
-      if (data?.otp) params.set('otp', data.otp)
-
-      if (data?.redirect_verify) {
-        setSuccess('Account created! However, we could not send the verification email right now. Redirecting — please use "Resend code" on the next page.')
-      } else {
-        setSuccess('Account created! Redirecting to email verification...')
-      }
-      setTimeout(() => navigate(`/verify-email?${params.toString()}`), 2000)
+      setSuccess('Account created successfully! Redirecting to login...')
+      setTimeout(() => navigate('/login'), 1500)
     } catch (err) {
       const responseData = err.response?.data
 
       if (!err.response) {
         if (err.code === 'ECONNABORTED') {
-          setError('The server is waking up from sleep — this can take up to 60 seconds on free hosting. Please wait a moment and try again.')
+          setError('The server is waking up — this can take up to 60 seconds. Please wait and try again.')
         } else {
           setError('Unable to connect. Please check your connection and try again.')
         }
@@ -71,7 +69,8 @@ export default function Register() {
         const fieldLabels = {
           email: 'Email',
           password: 'Password',
-          username: 'Username',
+          username: 'Full name',
+          confirm_password: 'Confirm password',
           non_field_errors: '',
           detail: '',
           error: '',
@@ -123,15 +122,15 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label">Username</label>
+            <label className="label">Full Name</label>
             <input
               name="username"
               type="text"
-              placeholder="Choose a username"
+              placeholder="Your full name"
               className="input-field"
               value={form.username}
               onChange={handleChange}
-              autoComplete="username"
+              autoComplete="name"
               required
             />
           </div>
@@ -156,7 +155,7 @@ export default function Register() {
               <input
                 name="password"
                 type={showPass ? 'text' : 'password'}
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
                 className="input-field pr-10"
                 value={form.password}
                 onChange={handleChange}
@@ -185,11 +184,11 @@ export default function Register() {
           <div>
             <label className="label">Confirm Password</label>
             <input
-              name="password2"
+              name="confirm_password"
               type={showPass ? 'text' : 'password'}
               placeholder="Re-enter your password"
               className="input-field"
-              value={form.password2}
+              value={form.confirm_password}
               onChange={handleChange}
               autoComplete="new-password"
               required

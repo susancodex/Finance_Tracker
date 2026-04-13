@@ -6,9 +6,6 @@ import PublicRoute from './routes/PublicRoute'
 import AppLayout from './layouts/AppLayout'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import VerifyEmail from './pages/VerifyEmail'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Transactions from './pages/Transactions'
 import Categories from './pages/Categories'
@@ -26,10 +23,6 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Route>
-
-            <Route path="/verify-email"    element={<VerifyEmail />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password"  element={<ResetPassword />} />
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>

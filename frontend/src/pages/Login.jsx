@@ -24,11 +24,7 @@ export default function Login() {
       navigate('/dashboard')
     } catch (err) {
       const detail = err.response?.data?.detail || ''
-      if (detail.includes('No active account')) {
-        setError('__unverified__')
-      } else {
-        setError(detail || 'Invalid credentials. Please try again.')
-      }
+      setError(detail || 'Invalid email or password. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -48,7 +44,6 @@ export default function Login() {
 
           {/* left side — brand */}
           <div className="lg:flex-1 text-center lg:text-left animate-fade-in-up">
-            {/* Logo */}
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
                 <svg className="w-7 h-7 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -70,12 +65,10 @@ export default function Login() {
               Track income and expenses, understand your spending, and take control of your financial health — all in one place.
             </p>
 
-            {/* Creator credit */}
             <p className="mt-5 text-slate-600 text-sm tracking-wide">
               — Created by <span className="text-slate-500 font-medium">Susan Acharya</span>
             </p>
 
-            {/* Feature badges */}
             <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
               {[
                 { icon: '📊', text: 'Smart Dashboard' },
@@ -95,24 +88,12 @@ export default function Login() {
           <div className="w-full lg:w-[400px] shrink-0 animate-fade-in-up-delay-1">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/50 p-8">
 
-              {/* Error banners */}
-              {error === '__unverified__' ? (
-                <div className="mb-5 p-3.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-sm">
-                  Your email is not verified.{' '}
-                  <Link
-                    to={`/verify-email?email=${encodeURIComponent(form.email)}`}
-                    className="underline font-medium hover:text-yellow-200"
-                  >
-                    Verify now
-                  </Link>.
-                </div>
-              ) : error ? (
+              {error && (
                 <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                   {error}
                 </div>
-              ) : null}
+              )}
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <input
                   name="email"
@@ -152,23 +133,12 @@ export default function Login() {
                 </button>
               </form>
 
-              <div className="mt-4 text-center">
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              {/* Divider */}
               <div className="my-6 flex items-center gap-3">
                 <div className="flex-1 h-px bg-slate-700" />
                 <span className="text-slate-500 text-sm">or</span>
                 <div className="flex-1 h-px bg-slate-700" />
               </div>
 
-              {/* Create account button */}
               <Link
                 to="/register"
                 className="block w-full text-center py-3 px-5 rounded-xl font-semibold text-slate-100 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-600/30 hover:border-emerald-500/50 transition-all duration-200"
@@ -176,14 +146,11 @@ export default function Login() {
                 Create New Account
               </Link>
             </div>
-
           </div>
 
         </div>
       </div>
 
-
-      {/* Footer */}
       <footer className="py-4 text-center">
         <p className="text-xs text-slate-600">
           © 2026 Finance Tracker &nbsp;•&nbsp; Built by{' '}
