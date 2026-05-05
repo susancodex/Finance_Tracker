@@ -23,9 +23,22 @@ frontend/dist/
 # Environment
 .env
 .env.local
+.env.prod
+.env.prod.local
 backend/.env
 frontend/.env
 frontend/.env.local
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.log
+logs/
+
+# Database backups
+backup*.sql
+*.sql.gz
+*.sql.gpg
 
 # IDE / OS
 .vscode/
@@ -43,3 +56,37 @@ Thumbs.db
 .agents/
 replit.md
 attached_assets/
+
+# Security & Certificates
+*.pem
+*.key
+*.crt
+*.cert
+certs/
+.ssh/
+
+# Docker volumes/data (local development)
+postgres_data/
+postgres_data_prod/
+backend_static/
+backend_static_prod/
+backend_media/
+backend_media_prod/
+
+# Test coverage
+htmlcov/
+.coverage
+.pytest_cache/
+coverage.xml
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.whl
+
+# OS specific
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride

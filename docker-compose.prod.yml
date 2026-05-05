@@ -1,0 +1,97 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: finance-tracker-db-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - finance-network-prod
+    restart: always
+    # Do not expose port in production
+    expose:
+      - "5432"
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: finance-tracker-backend-prod
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+    volumes:
+      - backend_static_prod:/app/staticfiles
+      - backend_media_prod:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --run-syncdb &&
+             python manage.py collectstatic --no-input &&
+             gunicorn finance_tracker.wsgi:application --bind 0.0.0.0:8000 --workers 4 --worker-class sync --timeout 120"
+    networks:
+      - finance-network-prod
+    restart: always
+    expose:
+      - "8000"
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: finance-tracker-frontend-prod
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    networks:
+      - finance-network-prod
+    restart: always
+    expose:
+      - "3000"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: finance-tracker-nginx
+    volumes:
+      - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - finance-network-prod
+    restart: always
+
+networks:
+  finance-network-prod:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  backend_static_prod:
+    driver: local
+  backend_media_prod:
+    driver: local
